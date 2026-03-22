@@ -38,10 +38,10 @@
     }
   }
 
-  function resultBadgeColor(result: string): string {
-    if (result === '1-0') return 'text-[#00E054]';
-    if (result === '0-1') return 'text-[#FF6B6B]';
-    return 'text-[#99AABB]';
+  function resultBadgeClasses(result: string): string {
+    if (result === '1-0') return 'bg-emerald-500/15 text-emerald-400 border-emerald-500/20';
+    if (result === '0-1') return 'bg-red-500/15 text-red-400 border-red-500/20';
+    return 'bg-white/[0.06] text-[#99AABB] border-white/[0.08]';
   }
 
   function formatResult(result: string): string {
@@ -50,12 +50,12 @@
   }
 </script>
 
-<div class="space-y-6">
+<div class="space-y-6 max-w-5xl mx-auto">
   <!-- Header -->
   <div class="flex items-center justify-between gap-4">
     <div>
       <h1 class="text-3xl font-bold text-white mb-1">Chess</h1>
-      <p class="text-[#99AABB] text-sm">{games.length} game{games.length !== 1 ? 's' : ''} in library</p>
+      <p class="text-[#99AABB]/70 text-sm">{games.length} game{games.length !== 1 ? 's' : ''} in library</p>
     </div>
     <Button variant="primary" onclick={() => (importModalOpen = true)}>Import PGN</Button>
   </div>
@@ -67,7 +67,7 @@
     </div>
     <select
       bind:value={resultFilter}
-      class="h-10 px-3 bg-[#1B2028] border border-white/[0.06] rounded-[6px] text-white text-sm focus:outline-none focus:border-[#40BCF4] transition-colors cursor-pointer"
+      class="h-10 px-3 bg-[#1B2028] border border-white/[0.06] rounded-lg text-white text-sm focus:outline-none focus:border-[#40BCF4] transition-colors cursor-pointer"
     >
       <option value="">All results</option>
       <option value="1-0">White wins (1-0)</option>
@@ -76,7 +76,7 @@
     </select>
     <select
       bind:value={colorFilter}
-      class="h-10 px-3 bg-[#1B2028] border border-white/[0.06] rounded-[6px] text-white text-sm focus:outline-none focus:border-[#40BCF4] transition-colors cursor-pointer"
+      class="h-10 px-3 bg-[#1B2028] border border-white/[0.06] rounded-lg text-white text-sm focus:outline-none focus:border-[#40BCF4] transition-colors cursor-pointer"
     >
       <option value="">All colors</option>
       <option value="white">Playing White</option>
@@ -84,53 +84,69 @@
     </select>
   </div>
 
-  <!-- Games Table -->
+  <!-- Games List -->
   {#if games.length === 0}
-    <div class="text-center py-16">
+    <div class="text-center py-20">
+      <div class="text-5xl mb-4 opacity-30">&#9812;</div>
       <p class="text-[#99AABB] text-lg mb-2">No games found</p>
-      <p class="text-[#99AABB]/60 text-sm">Import a PGN to get started.</p>
+      <p class="text-[#99AABB]/50 text-sm">Import a PGN to get started.</p>
     </div>
   {:else}
-    <div class="bg-[#1B2028] border border-white/[0.06] rounded-[8px] overflow-hidden">
-      <table class="w-full text-sm">
-        <thead>
-          <tr class="border-b border-white/[0.06]">
-            <th class="text-left text-[#99AABB] font-medium px-4 py-3">Players</th>
-            <th class="text-left text-[#99AABB] font-medium px-4 py-3">Result</th>
-            <th class="text-left text-[#99AABB] font-medium px-4 py-3 hidden sm:table-cell">Opening</th>
-            <th class="text-left text-[#99AABB] font-medium px-4 py-3 hidden md:table-cell">Date</th>
-            <th class="text-center text-[#99AABB] font-medium px-4 py-3 hidden md:table-cell">Your Color</th>
-          </tr>
-        </thead>
-        <tbody>
-          {#each games as game (game.id)}
-            <tr
-              class="border-b border-white/[0.04] hover:bg-white/[0.03] transition-colors cursor-pointer"
-              onclick={() => { window.location.href = `/chess/${game.id}`; }}
-            >
-              <td class="px-4 py-3">
-                <span class="text-white font-medium">{game.white}</span>
-                <span class="text-[#99AABB] mx-1">vs</span>
-                <span class="text-white font-medium">{game.black}</span>
-              </td>
-              <td class="px-4 py-3">
-                <span class="font-mono font-semibold {resultBadgeColor(game.result)}">{formatResult(game.result)}</span>
-              </td>
-              <td class="px-4 py-3 text-[#99AABB] hidden sm:table-cell">{game.openingName || '—'}</td>
-              <td class="px-4 py-3 text-[#99AABB] hidden md:table-cell">{game.date || '—'}</td>
-              <td class="px-4 py-3 text-center hidden md:table-cell">
-                {#if game.yourColor === 'white'}
-                  <span class="inline-block w-4 h-4 rounded-full bg-white border border-white/20" title="White"></span>
-                {:else if game.yourColor === 'black'}
-                  <span class="inline-block w-4 h-4 rounded-full bg-[#2C3440] border border-white/20" title="Black"></span>
-                {:else}
-                  <span class="text-[#99AABB]/40">—</span>
+    <div class="grid gap-3">
+      {#each games as game (game.id)}
+        <a
+          href="/chess/{game.id}"
+          class="group block bg-[#1B2028] border border-white/[0.06] rounded-xl p-4 hover:border-white/[0.12] hover:bg-[#1E2530] transition-all duration-200 hover:-translate-y-px hover:shadow-lg hover:shadow-black/20"
+        >
+          <div class="flex items-center gap-4">
+            <!-- Chess piece icon -->
+            <div class="flex-shrink-0 w-11 h-11 rounded-lg bg-white/[0.04] flex items-center justify-center text-2xl opacity-50 group-hover:opacity-70 transition-opacity">
+              {#if game.yourColor === 'white'}
+                &#9812;
+              {:else if game.yourColor === 'black'}
+                &#9818;
+              {:else}
+                &#9822;
+              {/if}
+            </div>
+
+            <!-- Game info -->
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-2 mb-0.5">
+                <span class="text-white font-semibold truncate">{game.white}</span>
+                <span class="text-[#99AABB]/50 text-xs">vs</span>
+                <span class="text-white font-semibold truncate">{game.black}</span>
+              </div>
+              <div class="flex items-center gap-2 text-sm">
+                {#if game.openingName}
+                  <span class="text-[#99AABB]/60 truncate">{game.openingName}</span>
                 {/if}
-              </td>
-            </tr>
-          {/each}
-        </tbody>
-      </table>
+                {#if game.date}
+                  <span class="text-[#99AABB]/30">&middot;</span>
+                  <span class="text-[#99AABB]/50 flex-shrink-0">{game.date}</span>
+                {/if}
+              </div>
+            </div>
+
+            <!-- Result badge -->
+            <div class="flex items-center gap-3 flex-shrink-0">
+              {#if game.yourColor}
+                <span
+                  class="w-4 h-4 rounded-full border flex-shrink-0 {
+                    game.yourColor === 'white'
+                      ? 'bg-white/90 border-white/30'
+                      : 'bg-[#2C3440] border-white/15'
+                  }"
+                  title="{game.yourColor === 'white' ? 'Playing White' : 'Playing Black'}"
+                ></span>
+              {/if}
+              <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold font-mono border {resultBadgeClasses(game.result)}">
+                {formatResult(game.result)}
+              </span>
+            </div>
+          </div>
+        </a>
+      {/each}
     </div>
   {/if}
 </div>
@@ -138,17 +154,23 @@
 <!-- Import PGN Modal -->
 <Modal open={importModalOpen} onclose={() => { importModalOpen = false; importError = ''; }} title="Import PGN">
   <div class="space-y-4">
-    <p class="text-[#99AABB] text-sm">Paste one or more PGN games below.</p>
-    <textarea
-      bind:value={importText}
-      placeholder="[Event &quot;...&quot;]&#10;[White &quot;...&quot;]&#10;[Black &quot;...&quot;]&#10;&#10;1.e4 e5 2.Nf3 ..."
-      rows="12"
-      class="w-full bg-[#14181C] border border-white/[0.06] rounded-[6px] text-white text-sm p-3 font-mono placeholder:text-[#99AABB]/40 focus:outline-none focus:border-[#40BCF4] resize-none transition-colors"
-    ></textarea>
+    <p class="text-[#99AABB]/70 text-sm">Paste one or more PGN games below.</p>
+    <div class="relative rounded-lg overflow-hidden border border-white/[0.08] focus-within:border-[#40BCF4]/50 transition-colors" style="background: linear-gradient(135deg, rgba(20,24,28,0.95), rgba(27,32,40,0.95)); backdrop-filter: blur(12px);">
+      <textarea
+        bind:value={importText}
+        placeholder="[Event &quot;...&quot;]&#10;[White &quot;...&quot;]&#10;[Black &quot;...&quot;]&#10;&#10;1.e4 e5 2.Nf3 ..."
+        rows="14"
+        class="w-full bg-transparent text-emerald-200/80 text-sm p-4 font-mono placeholder:text-[#99AABB]/30 focus:outline-none resize-none leading-relaxed"
+        spellcheck="false"
+      ></textarea>
+    </div>
     {#if importError}
-      <p class="text-[#FF6B6B] text-sm">{importError}</p>
+      <p class="text-red-400 text-sm flex items-center gap-1.5">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>
+        {importError}
+      </p>
     {/if}
-    <div class="flex justify-end gap-3">
+    <div class="flex justify-end gap-3 pt-1">
       <Button variant="ghost" onclick={() => { importModalOpen = false; importError = ''; }}>Cancel</Button>
       <Button variant="primary" onclick={handleImport}>Import</Button>
     </div>

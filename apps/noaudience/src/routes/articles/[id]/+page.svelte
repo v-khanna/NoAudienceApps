@@ -61,7 +61,7 @@
       const regex = new RegExp(`(${escapedText})`, 'g');
       result = result.replace(
         regex,
-        `<mark style="background-color: ${colorHex}4D; padding: 2px 0; border-radius: 2px;">$1</mark>`
+        `<mark style="background-color: ${colorHex}33; padding: 2px 0; border-radius: 2px; transition: background-color 200ms;" onmouseenter="this.style.backgroundColor='${colorHex}55'" onmouseleave="this.style.backgroundColor='${colorHex}33'">$1</mark>`
       );
     }
     return result;
@@ -77,9 +77,9 @@
 <HighlightToolbar x={toolbarX} y={toolbarY} visible={toolbarVisible} onselect={handleHighlightSelect} />
 
 {#if article}
-  <div class="max-w-[660px] mx-auto py-8">
+  <div class="max-w-[720px] mx-auto py-12 px-4">
     <!-- Back link -->
-    <a href="/articles" class="inline-flex items-center gap-1.5 text-sm text-[#99AABB] hover:text-white transition-colors mb-8">
+    <a href="/articles" class="inline-flex items-center gap-1.5 text-sm text-[#778899] hover:text-white transition-colors duration-200 mb-10">
       <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <polyline points="15 18 9 12 15 6" />
       </svg>
@@ -87,46 +87,56 @@
     </a>
 
     <!-- Article Header -->
-    <header class="mb-10">
+    <header class="mb-12">
       {#if article.coverImagePath}
-        <div class="aspect-video rounded-[10px] overflow-hidden mb-6">
+        <div class="aspect-[16/9] rounded-xl overflow-hidden mb-8 shadow-2xl shadow-black/40">
           <img src={article.coverImagePath} alt={article.title} class="w-full h-full object-cover" />
         </div>
       {/if}
-      <h1 class="text-[2.5rem] leading-[1.15] font-bold text-white mb-4" style="font-family: Georgia, 'Times New Roman', serif;">
+      <h1 class="text-[2.75rem] leading-[1.12] font-bold text-white mb-6 tracking-tight" style="font-family: Charter, Georgia, 'Times New Roman', serif;">
         {article.title}
       </h1>
-      <div class="flex items-center gap-3 text-sm text-[#99AABB]">
-        <span class="text-white font-medium">{article.author}</span>
-        {#if article.publication}
-          <span class="text-white/20">·</span>
-          <span>{article.publication}</span>
-        {/if}
-        <span class="text-white/20">·</span>
-        <span>{formatDate(article.datePublished)}</span>
-        <span class="text-white/20">·</span>
-        <span>{article.readingTimeMinutes} min read</span>
+      <div class="flex items-center gap-4 text-sm text-[#99AABB]">
+        <!-- Author avatar placeholder -->
+        <div class="w-10 h-10 rounded-full bg-gradient-to-br from-[#2C3440] to-[#3C4450] flex items-center justify-center flex-shrink-0">
+          <span class="text-white/60 text-sm font-medium">{article.author.charAt(0).toUpperCase()}</span>
+        </div>
+        <div class="flex flex-col">
+          <span class="text-white font-medium text-[15px]">{article.author}</span>
+          <div class="flex items-center gap-2 text-xs text-[#778899] mt-0.5">
+            {#if article.publication}
+              <span>{article.publication}</span>
+              <span class="text-white/15">·</span>
+            {/if}
+            <span>{formatDate(article.datePublished)}</span>
+            <span class="text-white/15">·</span>
+            <span>{article.readingTimeMinutes} min read</span>
+          </div>
+        </div>
       </div>
+
+      <!-- Divider -->
+      <div class="mt-8 border-t border-white/[0.06]"></div>
     </header>
 
     <!-- Article Content -->
     <article
       class="article-content"
-      style="font-family: Georgia, 'Times New Roman', serif;"
+      style="font-family: Charter, Georgia, 'Times New Roman', serif;"
     >
       {@html processedHtml}
     </article>
 
-    <!-- Highlights sidebar -->
+    <!-- Highlights section -->
     {#if articleHighlights.length > 0}
-      <div class="mt-16 pt-8 border-t border-white/[0.08]">
-        <h3 class="text-white font-semibold text-lg mb-4">Highlights ({articleHighlights.length})</h3>
-        <div class="space-y-4">
+      <div class="mt-20 pt-10 border-t border-white/[0.06]">
+        <h3 class="text-white font-semibold text-lg mb-6 tracking-tight" style="font-family: Charter, Georgia, 'Times New Roman', serif;">Highlights ({articleHighlights.length})</h3>
+        <div class="space-y-5">
           {#each articleHighlights as highlight}
-            <div class="pl-4 border-l-2" style="border-color: {HIGHLIGHT_COLORS[highlight.color]};">
-              <p class="text-[#CCDDEE] text-sm leading-relaxed">"{highlight.textExact}"</p>
+            <div class="pl-5 py-3 border-l-[3px] rounded-r-lg bg-white/[0.02]" style="border-color: {HIGHLIGHT_COLORS[highlight.color]};">
+              <p class="text-[#CCDDEE] text-[15px] leading-relaxed italic" style="font-family: Charter, Georgia, 'Times New Roman', serif;">"{highlight.textExact}"</p>
               {#if highlight.note}
-                <p class="text-[#99AABB] text-xs mt-1.5 italic">{highlight.note}</p>
+                <p class="text-[#99AABB] text-sm mt-2">{highlight.note}</p>
               {/if}
             </div>
           {/each}
@@ -135,46 +145,55 @@
     {/if}
   </div>
 {:else}
-  <div class="flex items-center justify-center h-64">
-    <p class="text-[#99AABB]">Article not found.</p>
+  <div class="flex flex-col items-center justify-center h-64">
+    <div class="w-16 h-16 rounded-full bg-white/[0.03] flex items-center justify-center mb-4">
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#556677" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" /><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+      </svg>
+    </div>
+    <p class="text-[#778899]">Article not found</p>
+    <a href="/articles" class="text-sm text-[#40BCF4] hover:underline mt-2">Back to Articles</a>
   </div>
 {/if}
 
 <style>
   :global(.article-content) {
     font-size: 18px;
-    line-height: 1.65;
+    line-height: 1.75;
     color: #CCDDEE;
+    max-width: 660px;
+    margin: 0 auto;
   }
 
   :global(.article-content h2) {
-    font-size: 1.5rem;
+    font-size: 1.6rem;
     font-weight: 700;
     color: white;
-    margin-top: 2.5rem;
+    margin-top: 3rem;
     margin-bottom: 1rem;
-    line-height: 1.3;
+    line-height: 1.25;
+    letter-spacing: -0.01em;
   }
 
   :global(.article-content h3) {
-    font-size: 1.25rem;
+    font-size: 1.3rem;
     font-weight: 600;
     color: white;
-    margin-top: 2rem;
+    margin-top: 2.5rem;
     margin-bottom: 0.75rem;
     line-height: 1.3;
   }
 
   :global(.article-content p) {
-    margin-bottom: 1.25rem;
+    margin-bottom: 1.5rem;
   }
 
   :global(.article-content blockquote) {
     border-left: 3px solid #40BCF4;
-    padding-left: 1.25rem;
-    margin: 1.5rem 0;
+    padding-left: 1.5rem;
+    margin: 2rem 0;
     font-style: italic;
-    color: #99AABB;
+    color: #AABBCC;
   }
 
   :global(.article-content blockquote p) {
@@ -184,23 +203,26 @@
   :global(.article-content a) {
     color: #40BCF4;
     text-decoration: underline;
-    text-underline-offset: 2px;
+    text-underline-offset: 3px;
+    text-decoration-color: #40BCF440;
+    transition: text-decoration-color 200ms;
   }
 
   :global(.article-content a:hover) {
-    color: #60CCF8;
+    text-decoration-color: #40BCF4;
   }
 
   :global(.article-content img) {
     max-width: 100%;
-    border-radius: 8px;
-    margin: 1.5rem 0;
+    border-radius: 10px;
+    margin: 2rem 0;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
   }
 
   :global(.article-content ul),
   :global(.article-content ol) {
     padding-left: 1.5rem;
-    margin-bottom: 1.25rem;
+    margin-bottom: 1.5rem;
   }
 
   :global(.article-content li) {
@@ -216,15 +238,27 @@
   }
 
   :global(.article-content pre) {
-    background: #2C3440;
-    padding: 1rem;
-    border-radius: 8px;
+    background: #1B2028;
+    padding: 1.25rem;
+    border-radius: 10px;
     overflow-x: auto;
-    margin-bottom: 1.25rem;
+    margin-bottom: 1.5rem;
+    border: 1px solid rgba(255, 255, 255, 0.04);
   }
 
   :global(.article-content pre code) {
     background: none;
     padding: 0;
+  }
+
+  :global(.article-content hr) {
+    border: none;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+    margin: 2.5rem 0;
+  }
+
+  :global(.article-content strong) {
+    color: white;
+    font-weight: 600;
   }
 </style>

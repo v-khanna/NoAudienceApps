@@ -51,8 +51,8 @@
   const colorNames = Object.keys(HIGHLIGHT_COLORS);
 </script>
 
-<div class="mb-8">
-  <a href="/articles" class="inline-flex items-center gap-1.5 text-sm text-[#99AABB] hover:text-white transition-colors mb-4">
+<div class="mb-10">
+  <a href="/articles" class="inline-flex items-center gap-1.5 text-sm text-[#778899] hover:text-white transition-colors duration-200 mb-5">
     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <polyline points="15 18 9 12 15 6" />
     </svg>
@@ -60,8 +60,8 @@
   </a>
   <div class="flex items-center justify-between">
     <div>
-      <h1 class="text-3xl font-bold text-white">Annotations</h1>
-      <p class="text-[#99AABB] text-sm mt-1">{allHighlights.length} highlights across your articles</p>
+      <h1 class="text-3xl font-bold text-white tracking-tight" style="font-family: Georgia, 'Times New Roman', serif;">Annotations</h1>
+      <p class="text-[#778899] text-sm mt-2">{allHighlights.length} highlight{allHighlights.length !== 1 ? 's' : ''} across your articles</p>
     </div>
     <div class="w-64">
       <SearchBar bind:value={searchQuery} placeholder="Search highlights..." />
@@ -70,13 +70,14 @@
 </div>
 
 <!-- Color filter -->
-<div class="flex items-center gap-2 mb-6">
-  <span class="text-xs text-[#99AABB] mr-1">Filter:</span>
+<div class="flex items-center gap-2.5 mb-8">
+  <span class="text-xs text-[#667788] mr-1">Filter:</span>
   {#each colorNames as color}
     <button
-      class="w-6 h-6 rounded-full border-2 transition-all cursor-pointer hover:scale-110"
+      class="w-7 h-7 rounded-full border-2 transition-all duration-200 cursor-pointer hover:scale-110"
       class:border-white={activeColorFilter === color}
       class:border-transparent={activeColorFilter !== color}
+      class:shadow-lg={activeColorFilter === color}
       style="background-color: {HIGHLIGHT_COLORS[color]};"
       title="{color} highlights"
       onclick={() => toggleColorFilter(color)}
@@ -84,7 +85,7 @@
   {/each}
   {#if activeColorFilter}
     <button
-      class="text-xs text-[#99AABB] hover:text-white transition-colors ml-2 cursor-pointer"
+      class="text-xs text-[#778899] hover:text-white transition-colors duration-200 ml-2 cursor-pointer"
       onclick={() => (activeColorFilter = '')}
     >
       Clear
@@ -93,40 +94,46 @@
 </div>
 
 {#if groupedHighlights.length === 0}
-  <div class="flex items-center justify-center h-48">
-    <p class="text-[#99AABB]">{searchQuery || activeColorFilter ? 'No matching highlights.' : 'No highlights yet.'}</p>
+  <div class="flex flex-col items-center justify-center py-20 text-center">
+    <div class="w-16 h-16 rounded-full bg-white/[0.03] flex items-center justify-center mb-4">
+      <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#556677" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+      </svg>
+    </div>
+    <p class="text-[#778899] text-sm">{searchQuery || activeColorFilter ? 'No matching highlights' : 'No highlights yet'}</p>
+    <p class="text-[#556677] text-xs mt-1">Select text while reading to create highlights</p>
   </div>
 {:else}
-  <div class="space-y-8">
+  <div class="space-y-10">
     {#each groupedHighlights as group}
       {#if group.article}
         <div>
           <!-- Article header -->
-          <a href="/articles/{group.article.id}" class="flex items-center gap-3 mb-3 group">
+          <a href="/articles/{group.article.id}" class="flex items-center gap-4 mb-5 group">
             <div class="flex-1 min-w-0">
-              <h3 class="text-white font-semibold text-base group-hover:text-[#40BCF4] transition-colors truncate">
+              <h3 class="text-white font-semibold text-[17px] group-hover:text-[#40BCF4] transition-colors duration-200 truncate" style="font-family: Georgia, 'Times New Roman', serif;">
                 {group.article.title}
               </h3>
-              <div class="flex items-center gap-2 text-xs text-[#99AABB]">
-                <span>{group.article.author}</span>
-                <span class="text-white/20">·</span>
+              <div class="flex items-center gap-2 text-xs text-[#778899] mt-1">
+                <span class="text-[#99AABB]">{group.article.author}</span>
+                <span class="text-white/15">·</span>
                 <span>{formatDate(group.article.datePublished)}</span>
               </div>
             </div>
-            <span class="text-xs text-[#778899] bg-[#2C3440] px-2 py-1 rounded-[4px]">
+            <span class="text-xs text-[#667788] bg-white/[0.04] px-2.5 py-1 rounded-full flex-shrink-0">
               {group.highlights.length} {group.highlights.length === 1 ? 'highlight' : 'highlights'}
             </span>
           </a>
 
           <!-- Highlights -->
-          <div class="space-y-3 ml-1">
+          <div class="space-y-4 ml-1">
             {#each group.highlights as highlight}
-              <div class="pl-4 py-2 border-l-2 bg-[#1B2028] rounded-r-[8px] px-4" style="border-color: {HIGHLIGHT_COLORS[highlight.color]};">
-                <p class="text-[#CCDDEE] text-sm leading-relaxed">"{highlight.textExact}"</p>
+              <div class="pl-5 py-4 border-l-[3px] rounded-r-lg bg-white/[0.02] px-5 transition-colors duration-200 hover:bg-white/[0.04]" style="border-color: {HIGHLIGHT_COLORS[highlight.color]};">
+                <p class="text-[#CCDDEE] text-[15px] leading-[1.7] italic" style="font-family: Charter, Georgia, 'Times New Roman', serif;">"{highlight.textExact}"</p>
                 {#if highlight.note}
-                  <p class="text-[#99AABB] text-xs mt-1.5 italic">{highlight.note}</p>
+                  <p class="text-[#99AABB] text-sm mt-2.5 leading-relaxed">{highlight.note}</p>
                 {/if}
-                <p class="text-[#778899] text-xs mt-1">{formatDate(highlight.createdAt)}</p>
+                <p class="text-[#556677] text-xs mt-2">{formatDate(highlight.createdAt)}</p>
               </div>
             {/each}
           </div>
