@@ -1,0 +1,19 @@
+{
+  "name": "@noaudience/core",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./db": "./src/db/client.ts",
+    "./db/schema": "./src/db/schema.ts",
+    "./components/*": "./src/components/*",
+    "./stores/*": "./src/stores/*"
+  },
+  "dependencies": {
+    "drizzle-orm": "^0.45.1"
+  },
+  "devDependencies": {
+    "drizzle-kit": "^0.31.10"
+  }
+}
