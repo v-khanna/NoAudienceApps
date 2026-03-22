@@ -8,21 +8,16 @@ function sanitizeParams(params: unknown[]): unknown[] {
   return params.map(p => p === undefined ? null : p);
 }
 
-// Convert undefined → null in result rows so JSON.parse(undefined) never happens
-function sanitizeRows(rows: Record<string, unknown>[]): Record<string, unknown>[] {
-  return rows.map(row => {
-    const clean: Record<string, unknown> = {};
-    for (const [key, value] of Object.entries(row)) {
-      clean[key] = value === undefined ? null : value;
-    }
-    return clean;
-  });
-}
-
 export async function initDatabase() {
   if (tauriDb) return getDb();
 
   tauriDb = await TauriDatabase.load('sqlite:noaudience.db');
+
+  // Run lightweight migrations for schema changes
+  await tauriDb.execute(
+    `ALTER TABLE book_reviews ADD COLUMN date_started TEXT`,
+    []
+  ).catch(() => {}); // Ignore if column already exists
 
   const db = initDb(async (sql: string, params: unknown[], method: string) => {
     const safeParams = sanitizeParams(params);
@@ -31,8 +26,14 @@ export async function initDatabase() {
       await tauriDb!.execute(sql, safeParams as any[]);
       return [];
     }
-    const rows = await tauriDb!.select<Record<string, unknown>[]>(sql, safeParams as any[]);
-    return sanitizeRows(rows);
+
+    // tauri-plugin-sql returns rows as objects: {id: 1, title: "Movie", genres: "[]"}
+    // Drizzle's sqlite-proxy mapResultRow accesses row[columnIndex] (numeric index),
+    // expecting arrays: [1, "Movie", "[]"]
+    // Object.values() preserves key insertion order, which matches SQL column order
+    // because the Rust side uses IndexMap (ordered).
+    const rawRows = await tauriDb!.select<Record<string, unknown>[]>(sql, safeParams as any[]);
+    return rawRows.map(row => Object.values(row));
   });
 
   return db;

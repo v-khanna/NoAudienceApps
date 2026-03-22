@@ -98,6 +98,7 @@ CREATE TABLE IF NOT EXISTS book_reviews (
   book_id INTEGER REFERENCES books(id),
   rating INTEGER,
   review TEXT,
+  date_started TEXT,
   date_read TEXT,
   created_at TEXT
 );

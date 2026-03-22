@@ -87,6 +87,7 @@ function mapReview(row: any): BookReview {
     bookId: row.bookId,
     rating: row.rating ?? 0,
     review: row.review ?? '',
+    dateStarted: row.dateStarted ?? '',
     dateRead: row.dateRead ?? '',
     createdAt: row.createdAt ?? '',
   };
@@ -458,7 +459,8 @@ export async function createReview(
     bookId: review.bookId,
     rating: review.rating,
     review: review.review,
-    dateRead: review.dateRead,
+    dateStarted: review.dateStarted || null,
+    dateRead: review.dateRead || null,
   });
   const rows = await db
     .select()
@@ -476,7 +478,8 @@ export async function updateReview(
   const values: Record<string, unknown> = {};
   if (updates.rating !== undefined) values.rating = updates.rating;
   if (updates.review !== undefined) values.review = updates.review;
-  if (updates.dateRead !== undefined) values.dateRead = updates.dateRead;
+  if (updates.dateStarted !== undefined) values.dateStarted = updates.dateStarted || null;
+  if (updates.dateRead !== undefined) values.dateRead = updates.dateRead || null;
 
   if (Object.keys(values).length === 0) return getReviewForBook(bookId);
 

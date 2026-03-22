@@ -42,6 +42,7 @@ export interface BookReview {
   bookId: number;
   rating: number;
   review: string;
+  dateStarted: string;
   dateRead: string;
   createdAt: string;
 }

@@ -106,6 +106,7 @@ export const bookReviews = sqliteTable('book_reviews', {
   bookId: integer('book_id').references(() => books.id),
   rating: integer('rating'),
   review: text('review'),
+  dateStarted: text('date_started'),
   dateRead: text('date_read'),
   createdAt: text('created_at').$defaultFn(() => new Date().toISOString()),
 });

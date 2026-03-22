@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { goto } from '$app/navigation';
   import Modal from '@noaudience/core/components/Modal.svelte';
   import { searchOpenLibrary, type OLSearchResult } from './openlibrary';
   import { addBookFromOpenLibrary } from './db';
@@ -38,10 +39,11 @@
   async function addBook(result: OLSearchResult) {
     adding = result.id;
     try {
-      await addBookFromOpenLibrary(result);
+      const book = await addBookFromOpenLibrary(result);
       onadd?.();
       onclose();
       resetForm();
+      goto(`/books/${book.id}`);
     } catch (e) {
       console.error('Failed to add book:', e);
     }

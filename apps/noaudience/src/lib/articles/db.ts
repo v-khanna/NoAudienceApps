@@ -84,12 +84,16 @@ export async function getAllHighlights(): Promise<Highlight[]> {
 export async function addHighlight(highlight: Omit<NewHighlight, 'id' | 'createdAt'>): Promise<Highlight> {
   const db = getDb();
   await db.insert(highlights).values(highlight);
-  const rows = await db
-    .select()
-    .from(highlights)
-    .where(eq(highlights.articleId, highlight.articleId))
-    .orderBy(desc(highlights.createdAt))
-    .limit(1);
+  const articleId = highlight.articleId;
+  const rows =
+    articleId != null
+      ? await db
+          .select()
+          .from(highlights)
+          .where(eq(highlights.articleId, articleId))
+          .orderBy(desc(highlights.createdAt))
+          .limit(1)
+      : await db.select().from(highlights).orderBy(desc(highlights.createdAt)).limit(1);
   return rows[0];
 }
 
