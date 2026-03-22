@@ -3,7 +3,8 @@
   import StarRating from '@noaudience/core/components/StarRating.svelte';
   import TagInput from '@noaudience/core/components/TagInput.svelte';
   import Button from '@noaudience/core/components/Button.svelte';
-  import { logFilm, searchFilms } from './db';
+  import { searchTmdb, type TmdbSearchResult } from './tmdb';
+  import { logFilm } from './db';
 
   interface Props {
     open: boolean;
@@ -13,7 +14,7 @@
 
   let { open, onclose, onsave }: Props = $props();
 
-  let filmTitle = $state('');
+  let filmQuery = $state('');
   let watchedDate = $state(new Date().toISOString().split('T')[0]);
   let rating = $state(0);
   let liked = $state(false);
@@ -21,22 +22,42 @@
   let review = $state('');
   let tags = $state<string[]>([]);
 
-  let searchResults = $derived(
-    filmTitle.length >= 2 ? searchFilms(filmTitle).slice(0, 5) : []
-  );
-  let selectedFilmId = $state<number | null>(null);
+  let searchResults = $state<TmdbSearchResult[]>([]);
+  let selectedFilm = $state<TmdbSearchResult | null>(null);
   let showResults = $state(false);
+  let searching = $state(false);
+  let debounceTimer: ReturnType<typeof setTimeout>;
 
-  function selectFilm(film: { id: number; title: string; year: number }) {
-    selectedFilmId = film.id;
-    filmTitle = `${film.title} (${film.year})`;
+  function handleInput() {
+    showResults = true;
+    selectedFilm = null;
+    clearTimeout(debounceTimer);
+    if (filmQuery.length < 2) {
+      searchResults = [];
+      return;
+    }
+    searching = true;
+    debounceTimer = setTimeout(async () => {
+      try {
+        searchResults = await searchTmdb(filmQuery);
+      } catch (e) {
+        console.error('TMDB search failed:', e);
+        searchResults = [];
+      }
+      searching = false;
+    }, 300);
+  }
+
+  function selectFilm(film: TmdbSearchResult) {
+    selectedFilm = film;
+    filmQuery = `${film.title} (${film.year})`;
     showResults = false;
   }
 
   function handleSave() {
-    if (!selectedFilmId) return;
+    if (!selectedFilm) return;
     logFilm({
-      filmId: selectedFilmId,
+      filmId: selectedFilm.id,
       watchedDate,
       rating,
       liked,
@@ -50,46 +71,71 @@
   }
 
   function resetForm() {
-    filmTitle = '';
+    filmQuery = '';
     watchedDate = new Date().toISOString().split('T')[0];
     rating = 0;
     liked = false;
     rewatch = false;
     review = '';
     tags = [];
-    selectedFilmId = null;
+    selectedFilm = null;
+    searchResults = [];
   }
 </script>
 
 <Modal {open} {onclose} title="Log Film">
   <div class="space-y-5">
-    <!-- Film search -->
+    <!-- Film search (TMDB) -->
     <div class="relative">
       <label class="block text-[#99AABB] text-xs font-medium uppercase tracking-wider mb-1.5">Film</label>
       <input
         type="text"
-        bind:value={filmTitle}
-        onfocus={() => showResults = true}
-        placeholder="Search for a film..."
+        bind:value={filmQuery}
+        oninput={handleInput}
+        onfocus={() => { if (searchResults.length) showResults = true; }}
+        placeholder="Search any movie..."
         class="w-full px-3 h-10 bg-[#1B2028] border border-white/[0.06] rounded-[6px] text-white text-sm placeholder:text-[#99AABB] focus:outline-none focus:border-[#40BCF4] transition-colors"
       />
+      {#if searching}
+        <div class="absolute right-3 top-[38px] text-[#99AABB] text-xs">Searching...</div>
+      {/if}
       {#if showResults && searchResults.length > 0}
-        <div class="absolute z-10 w-full mt-1 bg-[#2C3440] border border-white/[0.08] rounded-[6px] overflow-hidden shadow-xl">
+        <div class="absolute z-10 w-full mt-1 bg-[#2C3440] border border-white/[0.08] rounded-[6px] overflow-hidden shadow-xl max-h-[320px] overflow-y-auto">
           {#each searchResults as film}
             <button
-              class="w-full text-left px-3 py-2 text-sm text-white hover:bg-[#3C4450] transition-colors cursor-pointer flex items-center gap-3"
+              class="w-full text-left px-3 py-2.5 text-sm text-white hover:bg-[#3C4450] transition-colors cursor-pointer flex items-center gap-3"
               onclick={() => selectFilm(film)}
             >
-              <img src={film.posterPath} alt="" class="w-8 h-12 object-cover rounded-[2px]" />
-              <div>
-                <span class="font-medium">{film.title}</span>
-                <span class="text-[#99AABB] ml-1">({film.year})</span>
+              {#if film.posterPath}
+                <img src={film.posterPath} alt="" class="w-9 h-[54px] object-cover rounded-[3px] flex-shrink-0" />
+              {:else}
+                <div class="w-9 h-[54px] bg-[#1B2028] rounded-[3px] flex items-center justify-center text-[#535353] text-xs flex-shrink-0">?</div>
+              {/if}
+              <div class="min-w-0">
+                <div class="font-medium truncate">{film.title}</div>
+                <div class="text-[#99AABB] text-xs">{film.year || 'Unknown year'}</div>
               </div>
             </button>
           {/each}
         </div>
       {/if}
     </div>
+
+    <!-- Selected film preview -->
+    {#if selectedFilm}
+      <div class="flex gap-3 p-3 bg-[#1B2028] rounded-[6px] border border-white/[0.06]">
+        {#if selectedFilm.posterPath}
+          <img src={selectedFilm.posterPath} alt="" class="w-16 h-24 object-cover rounded-[4px]" />
+        {/if}
+        <div class="min-w-0 flex-1">
+          <div class="font-semibold text-white">{selectedFilm.title}</div>
+          <div class="text-[#99AABB] text-sm">{selectedFilm.year}</div>
+          {#if selectedFilm.overview}
+            <p class="text-[#99AABB] text-xs mt-1 line-clamp-2">{selectedFilm.overview}</p>
+          {/if}
+        </div>
+      </div>
+    {/if}
 
     <!-- Date watched -->
     <div>
@@ -110,7 +156,7 @@
     <!-- Like & Rewatch toggles -->
     <div class="flex items-center gap-6">
       <button
-        class="flex items-center gap-2 text-sm transition-colors cursor-pointer {liked ? 'text-[#FF8000]' : 'text-[#99AABB] hover:text-white'}"
+        class="flex items-center gap-2 text-sm transition-colors cursor-pointer {liked ? 'text-[#FF6B6B]' : 'text-[#99AABB] hover:text-white'}"
         onclick={() => liked = !liked}
       >
         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill={liked ? 'currentColor' : 'none'} stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -150,9 +196,18 @@
 
     <!-- Save -->
     <div class="flex justify-end pt-2">
-      <Button variant="primary" onclick={handleSave} disabled={!selectedFilmId}>
+      <Button variant="primary" onclick={handleSave} disabled={!selectedFilm}>
         Save
       </Button>
     </div>
   </div>
 </Modal>
+
+<style>
+  .line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+</style>
