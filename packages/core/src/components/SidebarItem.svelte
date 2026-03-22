@@ -4,31 +4,38 @@
     label: string;
     indent?: boolean;
     currentPath?: string;
-    icon?: string;
   }
 
-  let { href, label, indent = false, currentPath = '', icon = '' }: Props = $props();
+  let { href, label, indent = false, currentPath = '' }: Props = $props();
   let active = $derived(currentPath === href || (href !== '/' && currentPath.startsWith(href + '/')));
 </script>
 
 <a
   {href}
-  class="group flex items-center gap-3 mx-2 h-9 text-sm transition-all duration-200 relative rounded-lg
-    {indent ? 'pl-10 pr-3' : 'px-3'}
-    {active
-      ? 'text-white bg-white/[0.08]'
-      : 'text-[#8899AA] hover:text-white hover:bg-white/[0.05]'}"
+  class="sidebar-item"
+  class:active
+  class:indent
+  style="
+    display: flex;
+    align-items: center;
+    height: 28px;
+    padding: 0 12px;
+    font-size: {indent ? '11px' : '12px'};
+    font-weight: 500;
+    color: {active ? 'var(--text-primary)' : 'var(--text-secondary)'};
+    background: transparent;
+    border-left: {active ? '2px solid var(--accent)' : '2px solid transparent'};
+    margin-left: {indent ? '12px' : '0'};
+    text-decoration: none;
+    transition: color 150ms ease-out, background 150ms ease-out;
+  "
 >
-  {#if active && !indent}
-    <span class="absolute left-0 top-1.5 bottom-1.5 w-[3px] rounded-r bg-[#40BCF4]"></span>
-  {/if}
-  {#if indent}
-    <span class="absolute left-[26px] top-0 bottom-0 w-px bg-white/[0.06]"></span>
-  {/if}
-  {#if icon}
-    <span class="w-5 h-5 flex items-center justify-center text-current opacity-70 group-hover:opacity-100 transition-opacity">
-      {@html icon}
-    </span>
-  {/if}
-  <span class="truncate">{label}</span>
+  {label}
 </a>
+
+<style>
+  .sidebar-item:hover {
+    color: var(--text-primary);
+    background: rgba(255, 255, 255, 0.03);
+  }
+</style>

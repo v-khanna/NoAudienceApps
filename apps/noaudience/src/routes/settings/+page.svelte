@@ -1,5 +1,4 @@
 <script lang="ts">
-  import Button from '@noaudience/core/components/Button.svelte';
   import { allModules, enabledModuleIds, type ModuleId } from '@noaudience/core/stores/modules';
   import { appSettings } from '@noaudience/core/stores/settings';
 
@@ -34,100 +33,144 @@
   }
 </script>
 
-<div class="px-8 py-12 max-w-2xl mx-auto">
-  <div class="mb-10">
-    <h1 class="text-3xl font-bold text-white tracking-tight">Settings</h1>
-    <p class="text-[#8899AA] mt-1.5">Configure your NoAudience experience.</p>
-  </div>
+<div style="max-width: 480px;">
+  <h1 style="font-size: 15px; font-weight: 600; color: var(--text-primary); margin: 0 0 24px;">Settings</h1>
 
   <!-- Modules -->
-  <section class="mb-8">
-    <div class="bg-[#161B22] border border-white/[0.06] rounded-xl overflow-hidden">
-      <div class="px-5 py-4 border-b border-white/[0.04]">
-        <h2 class="text-[15px] font-semibold text-white">Modules</h2>
-        <p class="text-[12px] text-[#667788] mt-0.5">Enable or disable sections of the app.</p>
-      </div>
-      <div class="divide-y divide-white/[0.04]">
-        {#each allModules as mod (mod.id)}
-          <label
-            class="flex items-center justify-between px-5 py-3.5 cursor-pointer hover:bg-white/[0.02] transition-colors duration-150"
-          >
-            <span class="text-[14px] text-white/90">{mod.label}</span>
-            <!-- Custom toggle -->
-            <button
-              type="button"
-              role="switch"
-              aria-checked={$enabledModuleIds.has(mod.id)}
-              onclick={() => toggleModule(mod.id)}
-              class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-[#40BCF4]/40 focus:ring-offset-2 focus:ring-offset-[#161B22]
-                {$enabledModuleIds.has(mod.id) ? 'bg-emerald-500' : 'bg-white/[0.12]'}"
-            >
-              <span
-                class="inline-block h-4 w-4 rounded-full bg-white transition-transform duration-200 shadow-sm
-                  {$enabledModuleIds.has(mod.id) ? 'translate-x-6' : 'translate-x-1'}"
-              ></span>
-            </button>
-          </label>
-        {/each}
-      </div>
+  <section style="margin-bottom: 32px;">
+    <h2 style="font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-tertiary); margin: 0 0 12px;">Modules</h2>
+    <div style="display: flex; flex-direction: column; gap: 8px;">
+      {#each allModules as mod (mod.id)}
+        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 13px; color: var(--text-primary);">
+          <input
+            type="checkbox"
+            checked={$enabledModuleIds.has(mod.id)}
+            onchange={() => toggleModule(mod.id)}
+            style="accent-color: var(--accent);"
+          />
+          {mod.label}
+        </label>
+      {/each}
     </div>
   </section>
 
   <!-- API Keys -->
-  <section class="mb-8">
-    <div class="bg-[#161B22] border border-white/[0.06] rounded-xl overflow-hidden">
-      <div class="px-5 py-4 border-b border-white/[0.04]">
-        <h2 class="text-[15px] font-semibold text-white">API Keys</h2>
-        <p class="text-[12px] text-[#667788] mt-0.5">Connect external services.</p>
+  <section style="margin-bottom: 32px;">
+    <h2 style="font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-tertiary); margin: 0 0 12px;">API Keys</h2>
+    <div style="display: flex; flex-direction: column; gap: 16px;">
+      <div>
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px;">
+          <label for="tmdb-key" style="font-size: 12px; color: var(--text-secondary);">TMDB API Key</label>
+          <button
+            type="button"
+            onclick={() => showTmdbKey = !showTmdbKey}
+            style="font-size: 11px; color: var(--text-tertiary); background: none; border: none; cursor: pointer;"
+            class="toggle-btn"
+          >
+            {showTmdbKey ? 'Hide' : 'Show'}
+          </button>
+        </div>
+        <input
+          id="tmdb-key"
+          type={showTmdbKey ? 'text' : 'password'}
+          value={settings.tmdbApiKey}
+          oninput={updateTmdbKey}
+          placeholder="Enter your TMDB API key"
+          style="
+            width: 100%;
+            height: 32px;
+            padding: 0 12px;
+            font-size: 12px;
+            background: var(--bg-inset);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            color: var(--text-primary);
+            outline: none;
+            box-sizing: border-box;
+          "
+          class="settings-input"
+        />
+        <p style="font-size: 11px; color: var(--text-tertiary); margin: 4px 0 0;">Required for film metadata and poster images.</p>
       </div>
-      <div class="p-5 flex flex-col gap-5">
-        <div>
-          <div class="flex items-center justify-between mb-1.5">
-            <label class="block text-[13px] text-[#99AABB] font-medium" for="tmdb-key">TMDB API Key</label>
-            <button
-              type="button"
-              onclick={() => showTmdbKey = !showTmdbKey}
-              class="text-[11px] text-[#667788] hover:text-[#99AABB] transition-colors"
-            >
-              {showTmdbKey ? 'Hide' : 'Show'}
-            </button>
-          </div>
-          <input
-            id="tmdb-key"
-            type={showTmdbKey ? 'text' : 'password'}
-            value={settings.tmdbApiKey}
-            oninput={updateTmdbKey}
-            class="w-full bg-[#0D1117] border border-white/[0.08] rounded-lg px-3.5 py-2.5 text-[14px] text-white placeholder-[#445566] focus:outline-none focus:border-[#40BCF4]/50 focus:ring-1 focus:ring-[#40BCF4]/20 transition-all"
-            placeholder="Enter your TMDB API key"
-          />
-          <p class="text-[12px] text-[#556677] mt-1.5">Required for film metadata and poster images.</p>
-        </div>
-        <div>
-          <label class="block text-[13px] text-[#99AABB] font-medium mb-1.5" for="substack-url">Substack Feed URL</label>
-          <input
-            id="substack-url"
-            type="text"
-            value={settings.substackFeedUrl}
-            oninput={updateSubstackUrl}
-            class="w-full bg-[#0D1117] border border-white/[0.08] rounded-lg px-3.5 py-2.5 text-[14px] text-white placeholder-[#445566] focus:outline-none focus:border-[#40BCF4]/50 focus:ring-1 focus:ring-[#40BCF4]/20 transition-all"
-            placeholder="https://yourname.substack.com/feed"
-          />
-        </div>
+      <div>
+        <label for="substack-url" style="font-size: 12px; color: var(--text-secondary); display: block; margin-bottom: 4px;">Substack Feed URL</label>
+        <input
+          id="substack-url"
+          type="text"
+          value={settings.substackFeedUrl}
+          oninput={updateSubstackUrl}
+          placeholder="https://yourname.substack.com/feed"
+          style="
+            width: 100%;
+            height: 32px;
+            padding: 0 12px;
+            font-size: 12px;
+            background: var(--bg-inset);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            color: var(--text-primary);
+            outline: none;
+            box-sizing: border-box;
+          "
+          class="settings-input"
+        />
       </div>
     </div>
   </section>
 
   <!-- Data -->
-  <section class="mb-8">
-    <div class="bg-[#161B22] border border-white/[0.06] rounded-xl overflow-hidden">
-      <div class="px-5 py-4 border-b border-white/[0.04]">
-        <h2 class="text-[15px] font-semibold text-white">Data</h2>
-        <p class="text-[12px] text-[#667788] mt-0.5">Export or import your data.</p>
-      </div>
-      <div class="p-5 flex gap-3">
-        <Button variant="secondary" onclick={() => {}}>Export All Data</Button>
-        <Button variant="secondary" onclick={() => {}}>Import Data</Button>
-      </div>
+  <section style="margin-bottom: 32px;">
+    <h2 style="font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-tertiary); margin: 0 0 12px;">Data</h2>
+    <div style="display: flex; gap: 8px;">
+      <button
+        type="button"
+        style="
+          height: 32px;
+          padding: 0 12px;
+          font-size: 12px;
+          color: var(--text-secondary);
+          background: transparent;
+          border: 1px solid var(--border);
+          border-radius: 4px;
+          cursor: pointer;
+          transition: color 150ms ease-out, background 150ms ease-out;
+        "
+        class="data-btn"
+      >
+        Export All Data
+      </button>
+      <button
+        type="button"
+        style="
+          height: 32px;
+          padding: 0 12px;
+          font-size: 12px;
+          color: var(--text-secondary);
+          background: transparent;
+          border: 1px solid var(--border);
+          border-radius: 4px;
+          cursor: pointer;
+          transition: color 150ms ease-out, background 150ms ease-out;
+        "
+        class="data-btn"
+      >
+        Import Data
+      </button>
     </div>
   </section>
 </div>
+
+<style>
+  .settings-input:focus {
+    border-color: var(--accent);
+  }
+
+  .toggle-btn:hover {
+    color: var(--text-secondary);
+  }
+
+  .data-btn:hover {
+    color: var(--text-primary);
+    background: rgba(255, 255, 255, 0.03);
+  }
+</style>
