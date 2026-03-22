@@ -15,5 +15,8 @@
   },
   "devDependencies": {
     "drizzle-kit": "^0.31.10"
+  },
+  "peerDependencies": {
+    "svelte": "^5.0.0"
   }
 }
