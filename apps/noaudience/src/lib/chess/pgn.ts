@@ -44,7 +44,6 @@ export interface ParsedGame {
 // ─── Constants ───────────────────────────────────────────────────────────────
 
 const FILES = 'abcdefgh';
-const RANKS = '12345678';
 
 export const UNICODE_PIECES: Record<string, string> = {
   'wK': '\u2654', // ♔
@@ -94,14 +93,6 @@ function fileToCol(file: string): number {
 
 function rankToRow(rank: string): number {
   return parseInt(rank) - 1; // rank 1 = row 0 (white side)
-}
-
-function colToFile(col: number): string {
-  return FILES[col];
-}
-
-function rowToRank(row: number): string {
-  return RANKS[row];
 }
 
 // ─── Move Application ───────────────────────────────────────────────────────
@@ -347,7 +338,6 @@ export function parsePgn(pgnText: string): ParsedGame {
   const moves: ParsedMove[] = [];
 
   let currentBoard = startingBoard;
-  let moveNumber = 1;
 
   for (let i = 0; i < sanMoves.length; i++) {
     const color: Color = i % 2 === 0 ? 'w' : 'b';
@@ -366,8 +356,6 @@ export function parsePgn(pgnText: string): ParsedGame {
       currentBoard = cloneBoard(currentBoard);
     }
     positions.push(currentBoard);
-
-    if (color === 'b') moveNumber++;
   }
 
   return { headers, moves, positions };
