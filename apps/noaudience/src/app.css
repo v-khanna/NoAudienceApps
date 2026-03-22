@@ -1,0 +1,30 @@
+@import 'tailwindcss';
+@config '../../../tailwind.config.js';
+@source "../../../apps/*/src/**/*.{html,js,svelte,ts}";
+@source "../../../packages/*/src/**/*.{html,js,svelte,ts}";
+
+@font-face {
+  font-family: 'Inter';
+  src: url('/fonts/inter-variable.woff2') format('woff2');
+  font-weight: 100 900;
+  font-display: swap;
+}
+
+body {
+  @apply bg-page text-text-body font-sans tracking-dark antialiased;
+  overflow: hidden;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
