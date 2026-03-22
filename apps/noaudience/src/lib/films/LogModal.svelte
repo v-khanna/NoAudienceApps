@@ -2,7 +2,6 @@
   import Modal from '@noaudience/core/components/Modal.svelte';
   import StarRating from '@noaudience/core/components/StarRating.svelte';
   import TagInput from '@noaudience/core/components/TagInput.svelte';
-  import Button from '@noaudience/core/components/Button.svelte';
   import { searchTmdb, type TmdbSearchResult } from './tmdb';
   import { logFilm, addFilmFromTmdb } from './db';
 
@@ -56,7 +55,6 @@
 
   function handleSave() {
     if (!selectedFilm) return;
-    // Add the TMDB film to local data first
     const localFilm = addFilmFromTmdb(selectedFilm);
     logFilm({
       filmId: localFilm.id,
@@ -86,36 +84,36 @@
 </script>
 
 <Modal {open} {onclose} title="Log Film">
-  <div class="space-y-0">
+  <div style="display: flex; flex-direction: column; gap: 16px;">
     <!-- Film search (TMDB) -->
-    <div class="relative pb-6">
-      <label class="block text-[#667788] text-[10px] font-medium uppercase tracking-widest mb-2">Film</label>
+    <div class="search-container">
+      <label class="field-label">Film</label>
       <input
         type="text"
         bind:value={filmQuery}
         oninput={handleInput}
         onfocus={() => { if (searchResults.length) showResults = true; }}
         placeholder="Search any movie..."
-        class="w-full px-4 h-12 bg-[#14181C] ring-1 ring-white/[0.06] rounded-lg text-white text-sm placeholder:text-[#4A5568] focus:outline-none focus:ring-[#40BCF4]/50 transition-all duration-200"
+        class="field-input"
       />
       {#if searching}
-        <div class="absolute right-4 top-[42px] text-[#667788] text-xs animate-pulse">Searching...</div>
+        <div style="position: absolute; right: 8px; top: 28px; color: var(--text-tertiary); font-size: 13px;">Searching...</div>
       {/if}
       {#if showResults && searchResults.length > 0}
-        <div class="absolute z-10 w-full mt-1.5 backdrop-blur-xl bg-[#1E2530]/95 ring-1 ring-white/[0.08] rounded-xl overflow-hidden shadow-2xl max-h-[320px] overflow-y-auto">
+        <div class="search-dropdown">
           {#each searchResults as film}
             <button
-              class="search-result w-full text-left px-4 py-3 text-sm text-white hover:bg-white/[0.04] transition-all duration-200 cursor-pointer flex items-center gap-3"
+              class="search-result"
               onclick={() => selectFilm(film)}
             >
               {#if film.posterPath}
-                <img src={film.posterPath} alt="" class="w-9 h-[54px] object-cover rounded-[3px] ring-1 ring-white/[0.06] flex-shrink-0" />
+                <img src={film.posterPath} alt="" class="result-poster" />
               {:else}
-                <div class="w-9 h-[54px] bg-[#14181C] rounded-[3px] ring-1 ring-white/[0.06] flex items-center justify-center text-[#4A5568] text-xs flex-shrink-0">?</div>
+                <div class="result-poster-placeholder">?</div>
               {/if}
               <div class="min-w-0">
-                <div class="font-medium truncate">{film.title}</div>
-                <div class="text-[#667788] text-xs">{film.year || 'Unknown year'}</div>
+                <div style="color: var(--text-primary);">{film.title}</div>
+                <div style="color: var(--text-tertiary);">{film.year || 'Unknown year'}</div>
               </div>
             </button>
           {/each}
@@ -125,117 +123,218 @@
 
     <!-- Selected film preview -->
     {#if selectedFilm}
-      <div class="flex gap-4 p-4 bg-gradient-to-r from-[#1B2028] to-[#181C22] rounded-xl ring-1 ring-white/[0.04] mb-6">
+      <div class="selected-preview">
         {#if selectedFilm.posterPath}
-          <img src={selectedFilm.posterPath} alt="" class="w-16 h-24 object-cover rounded-lg ring-1 ring-white/[0.06]" />
+          <img src={selectedFilm.posterPath} alt="" style="width: 40px; height: 60px; object-fit: cover; border-radius: 4px; border: 1px solid var(--border);" />
         {/if}
-        <div class="min-w-0 flex-1">
-          <div class="font-semibold text-white">{selectedFilm.title}</div>
-          <div class="text-[#667788] text-sm mt-0.5">{selectedFilm.year}</div>
-          {#if selectedFilm.overview}
-            <p class="text-[#99AABB] text-xs mt-1.5 line-clamp-2 leading-relaxed">{selectedFilm.overview}</p>
-          {/if}
+        <div class="min-w-0" style="flex: 1;">
+          <div style="font-size: 13px; font-weight: 500; color: var(--text-primary);">{selectedFilm.title}</div>
+          <div style="font-size: 13px; color: var(--text-tertiary);">{selectedFilm.year}</div>
         </div>
       </div>
     {/if}
 
-    <div class="border-t border-white/[0.04]"></div>
-
     <!-- Date watched -->
-    <div class="py-6">
-      <label class="block text-[#667788] text-[10px] font-medium uppercase tracking-widest mb-2">Date Watched</label>
+    <div>
+      <label class="field-label">Date Watched</label>
       <input
         type="date"
         bind:value={watchedDate}
-        class="w-full px-4 h-12 bg-[#14181C] ring-1 ring-white/[0.06] rounded-lg text-white text-sm focus:outline-none focus:ring-[#40BCF4]/50 transition-all duration-200"
+        class="field-input"
       />
     </div>
 
-    <div class="border-t border-white/[0.04]"></div>
-
     <!-- Rating -->
-    <div class="py-6">
-      <label class="block text-[#667788] text-[10px] font-medium uppercase tracking-widest mb-3">Rating</label>
-      <div class="flex items-center justify-center py-2">
-        <StarRating value={rating} halfStars={true} size="lg" onchange={(v) => rating = v} />
+    <div>
+      <label class="field-label">Rating</label>
+      <div style="padding: 4px 0;">
+        <StarRating value={rating} halfStars={true} size="sm" onchange={(v) => rating = v} />
       </div>
     </div>
 
-    <div class="border-t border-white/[0.04]"></div>
-
-    <!-- Like & Rewatch toggles -->
-    <div class="flex items-center gap-8 py-6">
+    <!-- Like & Rewatch -->
+    <div class="flex items-center gap-16">
       <button
-        class="toggle-btn flex items-center gap-2.5 text-sm transition-all duration-200 ease-out cursor-pointer {liked ? 'text-[#FF6B6B]' : 'text-[#99AABB] hover:text-white'}"
+        class="toggle-btn"
+        class:active={liked}
         onclick={() => liked = !liked}
       >
-        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill={liked ? 'currentColor' : 'none'} stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-        </svg>
-        <span class="font-medium">Like</span>
+        {liked ? '♥' : '♡'} Like
       </button>
       <button
-        class="toggle-btn flex items-center gap-2.5 text-sm transition-all duration-200 ease-out cursor-pointer {rewatch ? 'text-[#40BCF4]' : 'text-[#99AABB] hover:text-white'}"
+        class="toggle-btn"
+        class:active={rewatch}
         onclick={() => rewatch = !rewatch}
       >
-        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <polyline points="1 4 1 10 7 10" />
-          <polyline points="23 20 23 14 17 14" />
-          <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15" />
-        </svg>
-        <span class="font-medium">Rewatch</span>
+        ↻ Rewatch
       </button>
     </div>
 
-    <div class="border-t border-white/[0.04]"></div>
-
     <!-- Review -->
-    <div class="py-6">
-      <label class="block text-[#667788] text-[10px] font-medium uppercase tracking-widest mb-2">Review</label>
+    <div>
+      <label class="field-label">Review</label>
       <textarea
         bind:value={review}
         placeholder="Write your thoughts..."
-        rows="4"
-        class="w-full px-4 py-3 bg-[#14181C] ring-1 ring-white/[0.06] rounded-lg text-white text-sm placeholder:text-[#4A5568] focus:outline-none focus:ring-[#40BCF4]/50 transition-all duration-200 resize-none leading-relaxed"
+        rows="3"
+        class="field-textarea"
       ></textarea>
     </div>
 
-    <div class="border-t border-white/[0.04]"></div>
-
     <!-- Tags -->
-    <div class="py-6">
-      <label class="block text-[#667788] text-[10px] font-medium uppercase tracking-widest mb-2">Tags</label>
+    <div>
+      <label class="field-label">Tags</label>
       <TagInput bind:tags placeholder="Add tags..." />
     </div>
 
     <!-- Save -->
-    <div class="flex justify-end pt-4 pb-1">
-      <Button variant="primary" onclick={handleSave} disabled={!selectedFilm}>
-        Save Entry
-      </Button>
+    <div class="flex justify-end">
+      <button class="save-btn" onclick={handleSave} disabled={!selectedFilm}>Save Entry</button>
     </div>
   </div>
 </Modal>
 
 <style>
-  .line-clamp-2 {
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
+  .field-label {
+    display: block;
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-bottom: 4px;
   }
 
-  .toggle-btn:hover {
-    transform: scale(1.05);
+  .field-input {
+    width: 100%;
+    height: 32px;
+    padding: 0 8px;
+    background: var(--bg-inset);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    color: var(--text-primary);
+    font-size: 13px;
+    outline: none;
   }
-  .toggle-btn:active {
-    transform: scale(0.95);
+  .field-input:focus {
+    border-color: var(--accent);
+  }
+
+  .field-textarea {
+    width: 100%;
+    padding: 8px;
+    background: var(--bg-inset);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    color: var(--text-primary);
+    font-size: 13px;
+    outline: none;
+    resize: none;
+  }
+  .field-textarea:focus {
+    border-color: var(--accent);
+  }
+
+  .search-container {
+    position: relative;
+  }
+
+  .search-dropdown {
+    position: absolute;
+    z-index: 10;
+    width: 100%;
+    margin-top: 4px;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    max-height: 240px;
+    overflow-y: auto;
   }
 
   .search-result {
-    border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+    width: 100%;
+    text-align: left;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px;
+    font-size: 13px;
+    background: none;
+    border: none;
+    border-bottom: 1px solid var(--border-subtle);
+    cursor: pointer;
+    transition: background-color 150ms ease-out;
   }
   .search-result:last-child {
     border-bottom: none;
+  }
+  .search-result:hover {
+    background-color: rgba(255, 255, 255, 0.03);
+  }
+
+  .result-poster {
+    width: 28px;
+    height: 42px;
+    object-fit: cover;
+    border-radius: 2px;
+    border: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+
+  .result-poster-placeholder {
+    width: 28px;
+    height: 42px;
+    background: var(--bg-inset);
+    border-radius: 2px;
+    border: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted);
+    font-size: 13px;
+    flex-shrink: 0;
+  }
+
+  .selected-preview {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    padding: 8px;
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+  }
+
+  .toggle-btn {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    font-size: 13px;
+    padding: 4px 0;
+    transition: color 150ms ease-out;
+  }
+  .toggle-btn:hover {
+    color: var(--text-primary);
+  }
+  .toggle-btn.active {
+    color: var(--accent);
+  }
+
+  .save-btn {
+    background: var(--accent);
+    color: #000;
+    border: none;
+    border-radius: 4px;
+    height: 28px;
+    padding: 0 12px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: opacity 150ms ease-out;
+  }
+  .save-btn:hover {
+    opacity: 0.9;
+  }
+  .save-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
   }
 </style>

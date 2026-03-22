@@ -1,5 +1,4 @@
 <script lang="ts">
-  import StarRating from '@noaudience/core/components/StarRating.svelte';
   import { getRecentLogs } from '$lib/films/db';
   import type { Film } from '$lib/films/mock';
 
@@ -18,7 +17,6 @@
 
   let logs = $state(getRecentLogs(50));
 
-  // Group logs by month
   let groupedLogs = $derived(() => {
     const groups: { label: string; entries: LogWithFilm[] }[] = [];
     const monthMap = new Map<string, LogWithFilm[]>();
@@ -38,68 +36,39 @@
     return groups;
   });
 
-  function ratingAccentClass(rating: number): string {
-    if (rating >= 4) return 'border-l-[#00E054]';
-    if (rating >= 3) return 'border-l-[#FFD700]';
-    if (rating >= 2) return 'border-l-[#FF8C00]';
-    return 'border-l-[#99AABB]/20';
+  function ratingToStars(rating: number): string {
+    const full = Math.floor(rating);
+    const half = rating % 1 >= 0.5;
+    return '★'.repeat(full) + (half ? '½' : '');
   }
 </script>
 
-<div class="max-w-4xl">
-  <h1 class="text-4xl font-bold text-white mb-10 tracking-tight">Diary</h1>
+<div class="max-w-3xl">
+  <h1 style="font-size: 15px; font-weight: 600; color: var(--text-primary); margin-bottom: 24px;">Diary</h1>
 
   {#each groupedLogs() as group}
-    <section class="mb-10">
-      <h2 class="text-xs font-semibold text-[#667788] uppercase tracking-widest mb-4">{group.label}</h2>
-      <div class="bg-gradient-to-b from-[#1B2028] to-[#181C22] rounded-xl ring-1 ring-white/[0.04] overflow-hidden">
+    <section style="margin-bottom: 24px;">
+      <h2 class="month-header">{group.label}</h2>
+      <div class="diary-table">
         {#each group.entries as entry, i}
           <a
             href="/films/{entry.film.id}"
-            class="diary-row flex items-center gap-4 px-5 py-4 hover:bg-white/[0.03] transition-all duration-200 ease-out border-l-2 {ratingAccentClass(entry.rating)} {i < group.entries.length - 1 ? 'border-b border-white/[0.04]' : ''}"
+            class="diary-row"
+            class:border-bottom={i < group.entries.length - 1}
           >
-            <!-- Date -->
-            <div class="w-12 text-center flex-shrink-0">
-              <div class="text-xl font-bold text-white">
-                {new Date(entry.watchedDate).getDate()}
-              </div>
-              <div class="text-[10px] text-[#667788] uppercase tracking-wider">
-                {new Date(entry.watchedDate).toLocaleDateString('en-US', { weekday: 'short' })}
-              </div>
-            </div>
-
-            <!-- Poster thumbnail -->
+            <span class="diary-date">
+              {new Date(entry.watchedDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+            </span>
             <img
               src={entry.film.posterPath}
               alt={entry.film.title}
-              class="w-9 h-[54px] object-cover rounded-[3px] flex-shrink-0 ring-1 ring-white/[0.06]"
+              class="diary-poster"
             />
-
-            <!-- Title & year -->
-            <div class="flex-1 min-w-0">
-              <span class="text-white font-medium">{entry.film.title}</span>
-              <span class="text-[#667788] ml-2 text-sm">{entry.film.year}</span>
-            </div>
-
-            <!-- Stars -->
-            <div class="flex-shrink-0">
-              <StarRating value={entry.rating} size="sm" readonly={true} />
-            </div>
-
-            <!-- Heart -->
+            <span class="diary-title">{entry.film.title}</span>
+            <span class="diary-year">{entry.film.year}</span>
+            <span class="diary-rating">{ratingToStars(entry.rating)}</span>
             {#if entry.liked}
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="#FF6B6B" stroke="#FF6B6B" stroke-width="2" class="flex-shrink-0">
-                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-              </svg>
-            {/if}
-
-            <!-- Rewatch -->
-            {#if entry.rewatch}
-              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#40BCF4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="flex-shrink-0">
-                <polyline points="1 4 1 10 7 10" />
-                <polyline points="23 20 23 14 17 14" />
-                <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15" />
-              </svg>
+              <span class="diary-liked">♥</span>
             {/if}
           </a>
         {/each}
@@ -108,24 +77,82 @@
   {/each}
 
   {#if logs.length === 0}
-    <div class="flex flex-col items-center justify-center py-24 text-center">
-      <svg xmlns="http://www.w3.org/2000/svg" width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="#2C3440" stroke-width="1" class="mb-5">
-        <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
-        <line x1="16" y1="2" x2="16" y2="6" />
-        <line x1="8" y1="2" x2="8" y2="6" />
-        <line x1="3" y1="10" x2="21" y2="10" />
-      </svg>
-      <p class="text-[#99AABB] text-lg font-medium">No diary entries yet</p>
-      <p class="text-[#667788] text-sm mt-2 max-w-xs">Start logging films to build your personal viewing history.</p>
+    <div style="padding: 32px 0; color: var(--text-secondary); text-align: center;">
+      No diary entries yet. Start logging films to build your viewing history.
     </div>
   {/if}
 </div>
 
 <style>
+  .month-header {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-tertiary);
+    margin-bottom: 8px;
+    font-weight: 500;
+  }
+
+  .diary-table {
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+
   .diary-row {
-    transition: background-color 0.2s ease-out, transform 0.2s ease-out;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    height: 32px;
+    padding: 0 12px;
+    font-size: 13px;
+    text-decoration: none;
+    color: inherit;
+    transition: background-color 150ms ease-out;
   }
   .diary-row:hover {
-    transform: translateX(2px);
+    background-color: rgba(255, 255, 255, 0.03);
+  }
+  .diary-row.border-bottom {
+    border-bottom: 1px solid var(--border-subtle);
+  }
+
+  .diary-date {
+    color: var(--text-secondary);
+    width: 64px;
+    flex-shrink: 0;
+  }
+
+  .diary-poster {
+    width: 24px;
+    height: 24px;
+    object-fit: cover;
+    border-radius: 2px;
+    border: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+
+  .diary-title {
+    color: var(--text-primary);
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .diary-year {
+    color: var(--text-tertiary);
+    flex-shrink: 0;
+  }
+
+  .diary-rating {
+    color: var(--accent);
+    flex-shrink: 0;
+  }
+
+  .diary-liked {
+    color: var(--text-secondary);
+    flex-shrink: 0;
   }
 </style>
