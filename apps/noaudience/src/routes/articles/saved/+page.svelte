@@ -15,60 +15,63 @@
     return new Date(dateStr).toLocaleDateString('en-US', {
       month: 'short',
       day: 'numeric',
-      year: 'numeric',
     });
   }
 </script>
 
-<div class="mb-10">
-  <a href="/articles" class="inline-flex items-center gap-1.5 text-sm text-[#778899] hover:text-white transition-colors duration-200 mb-5">
-    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+<!-- Header -->
+<div style="display: flex; align-items: center; gap: 12px; margin-bottom: 24px;">
+  <a href="/articles" class="back-link" style="font-size: 11px; color: var(--text-tertiary); text-decoration: none;">
+    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle;">
       <polyline points="15 18 9 12 15 6" />
     </svg>
-    Articles
   </a>
-  <div class="flex items-center justify-between">
-    <div>
-      <h1 class="text-3xl font-bold text-white tracking-tight" style="font-family: Georgia, 'Times New Roman', serif;">Saved Articles</h1>
-      <p class="text-[#778899] text-sm mt-2">{allSaved.length} article{allSaved.length !== 1 ? 's' : ''} saved</p>
-    </div>
-    <div class="w-64">
-      <SearchBar bind:value={searchQuery} placeholder="Search saved..." />
-    </div>
+  <h1 style="font-size: 15px; font-weight: 600; color: var(--text-primary); margin: 0;">Saved</h1>
+  <div style="width: 200px;">
+    <SearchBar bind:value={searchQuery} placeholder="Search saved..." />
   </div>
+  <div style="flex: 1;"></div>
+  <span style="font-size: 11px; color: var(--text-tertiary);">{allSaved.length} saved</span>
 </div>
 
 {#if articles.length === 0}
-  <div class="flex flex-col items-center justify-center py-20 text-center">
-    <div class="w-16 h-16 rounded-full bg-white/[0.03] flex items-center justify-center mb-4">
-      <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#556677" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
-      </svg>
-    </div>
-    <p class="text-[#778899] text-sm">{searchQuery ? 'No results found' : 'No saved articles yet'}</p>
-    <p class="text-[#556677] text-xs mt-1">{searchQuery ? 'Try a different search term' : 'Save articles from the web to read later'}</p>
+  <div style="padding: 48px 0; text-align: center;">
+    <p style="font-size: 12px; color: var(--text-tertiary);">{searchQuery ? 'No results found' : 'No saved articles yet'}</p>
   </div>
 {:else}
-  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-    {#each articles as article}
-      <a href="/articles/{article.id}" class="group block rounded-xl overflow-hidden relative transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl hover:shadow-black/30">
-        <div class="aspect-[16/9] overflow-hidden bg-gradient-to-br from-[#1B2028] to-[#2C3440]">
-          {#if article.coverImagePath}
-            <img src={article.coverImagePath} alt={article.title} class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-          {/if}
-        </div>
-        <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
-        <div class="absolute bottom-0 left-0 right-0 p-5">
-          <h3 class="text-white font-bold text-lg leading-snug line-clamp-2 mb-1.5" style="font-family: Georgia, 'Times New Roman', serif;">{article.title}</h3>
-          <div class="flex items-center gap-2 text-xs text-white/50">
-            <span>{article.author}</span>
-            <span class="text-white/30">·</span>
-            <span>{article.publication}</span>
-            <span class="text-white/30">·</span>
-            <span>{formatDate(article.datePublished)}</span>
-          </div>
-        </div>
+  <div>
+    {#each articles as article, i}
+      <a
+        href="/articles/{article.id}"
+        class="row"
+        style="
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          height: 36px;
+          padding: 0 8px;
+          text-decoration: none;
+          border-bottom: {i < articles.length - 1 ? '1px solid var(--border-subtle)' : 'none'};
+          transition: background 150ms ease-out;
+        "
+      >
+        <span style="font-size: 12px; color: var(--text-primary); flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+          {article.title}
+        </span>
+        <span style="font-size: 11px; color: var(--text-tertiary); flex-shrink: 0;">
+          {formatDate(article.datePublished)}
+        </span>
       </a>
     {/each}
   </div>
 {/if}
+
+<style>
+  .back-link:hover {
+    color: var(--text-secondary);
+  }
+
+  .row:hover {
+    background: rgba(255, 255, 255, 0.03);
+  }
+</style>

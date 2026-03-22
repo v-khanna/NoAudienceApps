@@ -1,5 +1,4 @@
 <script lang="ts">
-  import Button from '@noaudience/core/components/Button.svelte';
   import Modal from '@noaudience/core/components/Modal.svelte';
   import { getAllFeeds, addFeed, deleteFeed, updateFeedSyncTime } from '$lib/articles/db';
 
@@ -10,7 +9,7 @@
   let feeds = $derived(getAllFeeds());
 
   function formatSyncTime(dateStr: string | null): string {
-    if (!dateStr) return 'Never synced';
+    if (!dateStr) return 'Never';
     const date = new Date(dateStr);
     const now = new Date();
     const diffMs = now.getTime() - date.getTime();
@@ -42,105 +41,160 @@
   }
 </script>
 
-<div class="mb-10">
-  <a href="/articles" class="inline-flex items-center gap-1.5 text-sm text-[#778899] hover:text-white transition-colors duration-200 mb-5">
-    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+<!-- Header -->
+<div style="display: flex; align-items: center; gap: 12px; margin-bottom: 24px;">
+  <a href="/articles" class="back-link" style="font-size: 11px; color: var(--text-tertiary); text-decoration: none;">
+    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle;">
       <polyline points="15 18 9 12 15 6" />
     </svg>
-    Articles
   </a>
-  <div class="flex items-center justify-between">
-    <div>
-      <h1 class="text-3xl font-bold text-white tracking-tight" style="font-family: Georgia, 'Times New Roman', serif;">Feeds</h1>
-      <p class="text-[#778899] text-sm mt-2">Manage your RSS subscriptions</p>
-    </div>
-    <Button onclick={() => (showAddModal = true)}>
-      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1.5">
-        <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
-      </svg>
-      Add Feed
-    </Button>
-  </div>
+  <h1 style="font-size: 15px; font-weight: 600; color: var(--text-primary); margin: 0;">Feeds</h1>
+  <div style="flex: 1;"></div>
+  <button class="header-btn" onclick={() => (showAddModal = true)}>Add Feed</button>
 </div>
 
 {#if feeds.length === 0}
-  <div class="flex flex-col items-center justify-center py-20 text-center">
-    <div class="w-16 h-16 rounded-full bg-white/[0.03] flex items-center justify-center mb-4">
-      <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#556677" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M4 11a9 9 0 0 1 9 9" /><path d="M4 4a16 16 0 0 1 16 16" /><circle cx="5" cy="19" r="1" />
-      </svg>
-    </div>
-    <p class="text-[#778899] text-sm">No feeds added yet</p>
-    <p class="text-[#556677] text-xs mt-1">Add an RSS feed to start syncing articles</p>
+  <div style="padding: 48px 0; text-align: center;">
+    <p style="font-size: 12px; color: var(--text-tertiary);">No feeds added yet</p>
   </div>
 {:else}
-  <div class="space-y-3">
-    {#each feeds as feed}
-      <div class="flex items-center justify-between p-5 rounded-xl border border-white/[0.04] hover:border-white/[0.10] hover:bg-white/[0.02] transition-all duration-250">
-        <div class="flex items-center gap-4 flex-1 min-w-0">
-          <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-[#2C3440] to-[#1B2028] flex items-center justify-center flex-shrink-0">
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#778899" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M4 11a9 9 0 0 1 9 9" /><path d="M4 4a16 16 0 0 1 16 16" /><circle cx="5" cy="19" r="1" />
-            </svg>
-          </div>
-          <div class="flex-1 min-w-0">
-            <h3 class="text-white font-semibold text-[15px]">{feed.name}</h3>
-            <p class="text-[#556677] text-xs mt-0.5 truncate">{feed.url}</p>
-            <div class="flex items-center gap-2 mt-2">
-              <span class="inline-flex items-center gap-1.5 text-xs text-[#778899]">
-                {#if feed.lastSyncedAt}
-                  <span class="w-1.5 h-1.5 rounded-full bg-[#00E054] shadow-[0_0_6px_rgba(0,224,84,0.4)]"></span>
-                {:else}
-                  <span class="w-1.5 h-1.5 rounded-full bg-[#FF8000] shadow-[0_0_6px_rgba(255,128,0,0.3)]"></span>
-                {/if}
-                {formatSyncTime(feed.lastSyncedAt)}
-              </span>
-            </div>
-          </div>
-        </div>
-        <div class="flex items-center gap-2 ml-4">
-          <Button variant="ghost" size="sm" onclick={() => handleSync(feed.id)}>
-            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <polyline points="23 4 23 10 17 10" /><polyline points="1 20 1 14 7 14" /><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
-            </svg>
-          </Button>
-          <Button variant="ghost" size="sm" onclick={() => handleDelete(feed.id)}>
-            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-red-400/70 hover:text-red-400">
-              <polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-            </svg>
-          </Button>
-        </div>
+  <div>
+    {#each feeds as feed, i}
+      <div
+        class="feed-row"
+        style="
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          height: 36px;
+          padding: 0 8px;
+          border-bottom: {i < feeds.length - 1 ? '1px solid var(--border-subtle)' : 'none'};
+          transition: background 150ms ease-out;
+        "
+      >
+        <span style="font-size: 12px; color: var(--text-primary); flex-shrink: 0; min-width: 0; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+          {feed.name}
+        </span>
+        <span style="font-size: 11px; color: var(--text-tertiary); flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+          {feed.url}
+        </span>
+        <span style="font-size: 11px; color: var(--text-tertiary); flex-shrink: 0; width: 60px; text-align: right;">
+          {formatSyncTime(feed.lastSyncedAt)}
+        </span>
+        <button class="icon-btn" onclick={() => handleSync(feed.id)} title="Sync">
+          <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="23 4 23 10 17 10" /><polyline points="1 20 1 14 7 14" /><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
+          </svg>
+        </button>
+        <button class="icon-btn delete-btn" onclick={() => handleDelete(feed.id)} title="Delete">
+          <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+          </svg>
+        </button>
       </div>
     {/each}
   </div>
 {/if}
 
 <!-- Add Feed Modal -->
-<Modal open={showAddModal} onclose={() => (showAddModal = false)} title="Add RSS Feed">
-  <div class="space-y-4">
+<Modal open={showAddModal} onclose={() => (showAddModal = false)} title="Add Feed">
+  <div style="display: flex; flex-direction: column; gap: 12px;">
     <div>
-      <label class="block text-sm text-[#99AABB] mb-1.5" for="feed-url">Feed URL</label>
+      <label style="display: block; font-size: 12px; color: var(--text-secondary); margin-bottom: 6px;" for="feed-url">Feed URL</label>
       <input
         id="feed-url"
         type="url"
         bind:value={feedUrl}
         placeholder="https://example.com/feed"
-        class="w-full px-4 h-11 bg-[#14181C] border border-white/[0.06] rounded-lg text-white text-sm placeholder:text-[#556677] focus:outline-none focus:border-[#40BCF4]/60 focus:ring-1 focus:ring-[#40BCF4]/20 transition-all duration-200"
+        style="
+          width: 100%;
+          height: 32px;
+          padding: 0 12px;
+          font-size: 12px;
+          background: var(--bg-inset);
+          border: 1px solid var(--border);
+          border-radius: 4px;
+          color: var(--text-primary);
+          outline: none;
+          box-sizing: border-box;
+        "
       />
     </div>
     <div>
-      <label class="block text-sm text-[#99AABB] mb-1.5" for="feed-name">Name (optional)</label>
+      <label style="display: block; font-size: 12px; color: var(--text-secondary); margin-bottom: 6px;" for="feed-name">Name (optional)</label>
       <input
         id="feed-name"
         type="text"
         bind:value={feedName}
         placeholder="My Favorite Blog"
-        class="w-full px-4 h-11 bg-[#14181C] border border-white/[0.06] rounded-lg text-white text-sm placeholder:text-[#556677] focus:outline-none focus:border-[#40BCF4]/60 focus:ring-1 focus:ring-[#40BCF4]/20 transition-all duration-200"
+        style="
+          width: 100%;
+          height: 32px;
+          padding: 0 12px;
+          font-size: 12px;
+          background: var(--bg-inset);
+          border: 1px solid var(--border);
+          border-radius: 4px;
+          color: var(--text-primary);
+          outline: none;
+          box-sizing: border-box;
+        "
       />
     </div>
-    <div class="flex justify-end gap-2 pt-2">
-      <Button variant="ghost" onclick={() => (showAddModal = false)}>Cancel</Button>
-      <Button onclick={handleAddFeed}>Add Feed</Button>
+    <div style="display: flex; justify-content: flex-end; gap: 8px; padding-top: 4px;">
+      <button class="header-btn" onclick={() => (showAddModal = false)}>Cancel</button>
+      <button class="header-btn" style="color: var(--accent);" onclick={handleAddFeed}>Add</button>
     </div>
   </div>
 </Modal>
+
+<style>
+  .back-link:hover {
+    color: var(--text-secondary);
+  }
+
+  .header-btn {
+    height: 32px;
+    padding: 0 12px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--accent);
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 150ms ease-out;
+  }
+
+  .header-btn:hover {
+    background: rgba(255, 255, 255, 0.03);
+  }
+
+  .feed-row:hover {
+    background: rgba(255, 255, 255, 0.03);
+  }
+
+  .icon-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    background: transparent;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    color: var(--text-tertiary);
+    flex-shrink: 0;
+    transition: color 150ms ease-out, background 150ms ease-out;
+  }
+
+  .icon-btn:hover {
+    color: var(--text-secondary);
+    background: rgba(255, 255, 255, 0.03);
+  }
+
+  .delete-btn:hover {
+    color: #f87171;
+  }
+</style>

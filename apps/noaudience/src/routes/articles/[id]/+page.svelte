@@ -15,7 +15,6 @@
 
   function formatDate(dateStr: string): string {
     return new Date(dateStr).toLocaleDateString('en-US', {
-      weekday: 'long',
       month: 'long',
       day: 'numeric',
       year: 'numeric',
@@ -61,7 +60,7 @@
       const regex = new RegExp(`(${escapedText})`, 'g');
       result = result.replace(
         regex,
-        `<mark style="background-color: ${colorHex}33; padding: 2px 0; border-radius: 2px; transition: background-color 200ms;" onmouseenter="this.style.backgroundColor='${colorHex}55'" onmouseleave="this.style.backgroundColor='${colorHex}33'">$1</mark>`
+        `<mark style="background-color: ${colorHex}33; padding: 1px 0; border-radius: 2px;">$1</mark>`
       );
     }
     return result;
@@ -77,66 +76,41 @@
 <HighlightToolbar x={toolbarX} y={toolbarY} visible={toolbarVisible} onselect={handleHighlightSelect} />
 
 {#if article}
-  <div class="max-w-[720px] mx-auto py-12 px-4">
+  <div style="max-width: 600px; margin: 0 auto; padding: 32px 16px;">
     <!-- Back link -->
-    <a href="/articles" class="inline-flex items-center gap-1.5 text-sm text-[#778899] hover:text-white transition-colors duration-200 mb-10">
-      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <a href="/articles" class="back-link" style="display: inline-flex; align-items: center; gap: 6px; font-size: 11px; color: var(--text-tertiary); text-decoration: none; margin-bottom: 32px;">
+      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <polyline points="15 18 9 12 15 6" />
       </svg>
-      Back to Articles
+      Articles
     </a>
 
     <!-- Article Header -->
-    <header class="mb-12">
-      {#if article.coverImagePath}
-        <div class="aspect-[16/9] rounded-xl overflow-hidden mb-8 shadow-2xl shadow-black/40">
-          <img src={article.coverImagePath} alt={article.title} class="w-full h-full object-cover" />
-        </div>
-      {/if}
-      <h1 class="text-[2.75rem] leading-[1.12] font-bold text-white mb-6 tracking-tight" style="font-family: Charter, Georgia, 'Times New Roman', serif;">
+    <header style="margin-bottom: 32px;">
+      <h1 style="font-size: 18px; font-weight: 600; color: var(--text-primary); margin: 0 0 12px 0; line-height: 1.4; font-family: Georgia, Charter, 'Times New Roman', serif;">
         {article.title}
       </h1>
-      <div class="flex items-center gap-4 text-sm text-[#99AABB]">
-        <!-- Author avatar placeholder -->
-        <div class="w-10 h-10 rounded-full bg-gradient-to-br from-[#2C3440] to-[#3C4450] flex items-center justify-center flex-shrink-0">
-          <span class="text-white/60 text-sm font-medium">{article.author.charAt(0).toUpperCase()}</span>
-        </div>
-        <div class="flex flex-col">
-          <span class="text-white font-medium text-[15px]">{article.author}</span>
-          <div class="flex items-center gap-2 text-xs text-[#778899] mt-0.5">
-            {#if article.publication}
-              <span>{article.publication}</span>
-              <span class="text-white/15">·</span>
-            {/if}
-            <span>{formatDate(article.datePublished)}</span>
-            <span class="text-white/15">·</span>
-            <span>{article.readingTimeMinutes} min read</span>
-          </div>
-        </div>
+      <div style="font-size: 11px; color: var(--text-tertiary);">
+        {article.author} · {formatDate(article.datePublished)} · {article.readingTimeMinutes} min
       </div>
-
-      <!-- Divider -->
-      <div class="mt-8 border-t border-white/[0.06]"></div>
+      <div style="margin-top: 16px; border-top: 1px solid var(--border);"></div>
     </header>
 
     <!-- Article Content -->
-    <article
-      class="article-content"
-      style="font-family: Charter, Georgia, 'Times New Roman', serif;"
-    >
+    <article class="article-content">
       {@html processedHtml}
     </article>
 
     <!-- Highlights section -->
     {#if articleHighlights.length > 0}
-      <div class="mt-20 pt-10 border-t border-white/[0.06]">
-        <h3 class="text-white font-semibold text-lg mb-6 tracking-tight" style="font-family: Charter, Georgia, 'Times New Roman', serif;">Highlights ({articleHighlights.length})</h3>
-        <div class="space-y-5">
+      <div style="margin-top: 48px; padding-top: 24px; border-top: 1px solid var(--border);">
+        <h3 style="font-size: 13px; font-weight: 600; color: var(--text-primary); margin: 0 0 16px 0;">Highlights ({articleHighlights.length})</h3>
+        <div style="display: flex; flex-direction: column; gap: 12px;">
           {#each articleHighlights as highlight}
-            <div class="pl-5 py-3 border-l-[3px] rounded-r-lg bg-white/[0.02]" style="border-color: {HIGHLIGHT_COLORS[highlight.color]};">
-              <p class="text-[#CCDDEE] text-[15px] leading-relaxed italic" style="font-family: Charter, Georgia, 'Times New Roman', serif;">"{highlight.textExact}"</p>
+            <div style="padding-left: 16px; border-left: 2px solid {HIGHLIGHT_COLORS[highlight.color]};">
+              <p style="font-size: 14px; color: var(--text-secondary); line-height: 1.6; margin: 0; font-family: Georgia, Charter, 'Times New Roman', serif; font-style: italic;">"{highlight.textExact}"</p>
               {#if highlight.note}
-                <p class="text-[#99AABB] text-sm mt-2">{highlight.note}</p>
+                <p style="font-size: 12px; color: var(--text-tertiary); margin: 6px 0 0 0;">{highlight.note}</p>
               {/if}
             </div>
           {/each}
@@ -145,105 +119,102 @@
     {/if}
   </div>
 {:else}
-  <div class="flex flex-col items-center justify-center h-64">
-    <div class="w-16 h-16 rounded-full bg-white/[0.03] flex items-center justify-center mb-4">
-      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#556677" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" /><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
-      </svg>
-    </div>
-    <p class="text-[#778899]">Article not found</p>
-    <a href="/articles" class="text-sm text-[#40BCF4] hover:underline mt-2">Back to Articles</a>
+  <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 200px;">
+    <p style="font-size: 12px; color: var(--text-tertiary);">Article not found</p>
+    <a href="/articles" style="font-size: 11px; color: var(--accent); text-decoration: none; margin-top: 8px;">Back to Articles</a>
   </div>
 {/if}
 
 <style>
+  .back-link:hover {
+    color: var(--text-primary);
+  }
+
   :global(.article-content) {
-    font-size: 18px;
-    line-height: 1.75;
-    color: #CCDDEE;
-    max-width: 660px;
-    margin: 0 auto;
+    font-size: 16px;
+    line-height: 1.7;
+    color: var(--text-primary);
+    font-family: Georgia, Charter, 'Times New Roman', serif;
   }
 
   :global(.article-content h2) {
-    font-size: 1.6rem;
-    font-weight: 700;
-    color: white;
-    margin-top: 3rem;
-    margin-bottom: 1rem;
-    line-height: 1.25;
-    letter-spacing: -0.01em;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-top: 32px;
+    margin-bottom: 12px;
+    line-height: 1.3;
+    font-family: 'Inter', system-ui, sans-serif;
   }
 
   :global(.article-content h3) {
-    font-size: 1.3rem;
+    font-size: 14px;
     font-weight: 600;
-    color: white;
-    margin-top: 2.5rem;
-    margin-bottom: 0.75rem;
+    color: var(--text-primary);
+    margin-top: 24px;
+    margin-bottom: 8px;
     line-height: 1.3;
+    font-family: 'Inter', system-ui, sans-serif;
   }
 
   :global(.article-content p) {
-    margin-bottom: 1.5rem;
+    margin-bottom: 20px;
   }
 
   :global(.article-content blockquote) {
-    border-left: 3px solid #40BCF4;
-    padding-left: 1.5rem;
-    margin: 2rem 0;
+    border-left: 2px solid var(--accent);
+    padding-left: 16px;
+    margin: 24px 0;
     font-style: italic;
-    color: #AABBCC;
+    color: var(--text-secondary);
   }
 
   :global(.article-content blockquote p) {
-    margin-bottom: 0.5rem;
+    margin-bottom: 8px;
   }
 
   :global(.article-content a) {
-    color: #40BCF4;
+    color: var(--accent);
     text-decoration: underline;
     text-underline-offset: 3px;
-    text-decoration-color: #40BCF440;
-    transition: text-decoration-color 200ms;
+    text-decoration-color: rgba(64, 188, 244, 0.3);
   }
 
   :global(.article-content a:hover) {
-    text-decoration-color: #40BCF4;
+    text-decoration-color: var(--accent);
   }
 
   :global(.article-content img) {
     max-width: 100%;
-    border-radius: 10px;
-    margin: 2rem 0;
-    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+    border-radius: 4px;
+    margin: 20px 0;
   }
 
   :global(.article-content ul),
   :global(.article-content ol) {
-    padding-left: 1.5rem;
-    margin-bottom: 1.5rem;
+    padding-left: 20px;
+    margin-bottom: 20px;
   }
 
   :global(.article-content li) {
-    margin-bottom: 0.5rem;
+    margin-bottom: 8px;
   }
 
   :global(.article-content code) {
-    background: #2C3440;
+    background: var(--bg-elevated);
     padding: 2px 6px;
-    border-radius: 4px;
+    border-radius: 3px;
     font-size: 0.875em;
     font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
   }
 
   :global(.article-content pre) {
-    background: #1B2028;
-    padding: 1.25rem;
-    border-radius: 10px;
+    background: var(--bg-inset);
+    padding: 16px;
+    border-radius: 4px;
     overflow-x: auto;
-    margin-bottom: 1.5rem;
-    border: 1px solid rgba(255, 255, 255, 0.04);
+    margin-bottom: 20px;
+    border: 1px solid var(--border);
   }
 
   :global(.article-content pre code) {
@@ -253,12 +224,12 @@
 
   :global(.article-content hr) {
     border: none;
-    border-top: 1px solid rgba(255, 255, 255, 0.06);
-    margin: 2.5rem 0;
+    border-top: 1px solid var(--border);
+    margin: 32px 0;
   }
 
   :global(.article-content strong) {
-    color: white;
+    color: var(--text-primary);
     font-weight: 600;
   }
 </style>

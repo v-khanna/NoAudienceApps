@@ -7,47 +7,58 @@
     return new Date(dateStr).toLocaleDateString('en-US', {
       month: 'short',
       day: 'numeric',
-      year: 'numeric',
     });
   }
 </script>
 
-<div class="mb-10">
-  <a href="/articles" class="inline-flex items-center gap-1.5 text-sm text-[#778899] hover:text-white transition-colors duration-200 mb-5">
-    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+<!-- Header -->
+<div style="display: flex; align-items: center; gap: 12px; margin-bottom: 24px;">
+  <a href="/articles" class="back-link" style="font-size: 11px; color: var(--text-tertiary); text-decoration: none;">
+    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle;">
       <polyline points="15 18 9 12 15 6" />
     </svg>
-    Articles
   </a>
-  <h1 class="text-3xl font-bold text-white tracking-tight" style="font-family: Georgia, 'Times New Roman', serif;">Your Posts</h1>
-  <p class="text-[#778899] text-sm mt-2">Your synced Substack posts</p>
+  <h1 style="font-size: 15px; font-weight: 600; color: var(--text-primary); margin: 0;">Your Posts</h1>
 </div>
 
 {#if posts.length === 0}
-  <div class="flex flex-col items-center justify-center py-20 text-center">
-    <div class="w-16 h-16 rounded-full bg-white/[0.03] flex items-center justify-center mb-4">
-      <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#556677" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M12 20h9" /><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
-      </svg>
-    </div>
-    <p class="text-[#778899] text-sm">No posts synced yet</p>
-    <p class="text-[#556677] text-xs mt-1">Connect your Substack to see your posts here</p>
+  <div style="padding: 48px 0; text-align: center;">
+    <p style="font-size: 12px; color: var(--text-tertiary);">No posts synced yet</p>
   </div>
 {:else}
-  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-    {#each posts as article}
-      <a href="/articles/{article.id}" class="group block rounded-xl overflow-hidden relative transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl hover:shadow-black/30">
-        <div class="aspect-[16/9] overflow-hidden bg-gradient-to-br from-[#1B2028] to-[#2C3440]">
-          {#if article.coverImagePath}
-            <img src={article.coverImagePath} alt={article.title} class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-          {/if}
-        </div>
-        <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
-        <div class="absolute bottom-0 left-0 right-0 p-5">
-          <h3 class="text-white font-bold text-lg leading-snug line-clamp-2 mb-1.5" style="font-family: Georgia, 'Times New Roman', serif;">{article.title}</h3>
-          <p class="text-white/50 text-xs">{formatDate(article.datePublished)}</p>
-        </div>
+  <div>
+    {#each posts as article, i}
+      <a
+        href="/articles/{article.id}"
+        class="row"
+        style="
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          height: 36px;
+          padding: 0 8px;
+          text-decoration: none;
+          border-bottom: {i < posts.length - 1 ? '1px solid var(--border-subtle)' : 'none'};
+          transition: background 150ms ease-out;
+        "
+      >
+        <span style="font-size: 12px; color: var(--text-primary); flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+          {article.title}
+        </span>
+        <span style="font-size: 11px; color: var(--text-tertiary); flex-shrink: 0;">
+          {formatDate(article.datePublished)}
+        </span>
       </a>
     {/each}
   </div>
 {/if}
+
+<style>
+  .back-link:hover {
+    color: var(--text-secondary);
+  }
+
+  .row:hover {
+    background: rgba(255, 255, 255, 0.03);
+  }
+</style>
