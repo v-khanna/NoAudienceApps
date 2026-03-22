@@ -34,7 +34,7 @@ Not everyone wants the full suite. Films and Books ship as independent apps:
 
 ## Status
 
-Early development. See [SPEC.md](SPEC.md) for the full design document.
+Early development. See [SPEC.md](docs/SPEC.md) for the full design document.
 
 ## License
 
