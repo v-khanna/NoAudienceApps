@@ -24,6 +24,7 @@
     "vite": "^6.0.7"
   },
   "dependencies": {
+    "@noaudience/core": "workspace:*",
     "@tauri-apps/api": "^2.3.0"
   }
 }
