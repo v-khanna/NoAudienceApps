@@ -7,7 +7,7 @@
 
   let title = $state('');
   let content = $state('');
-  let saveStatus = $state('Draft saved');
+  let saveStatus = $state('Saved');
   let saveTimeout: ReturnType<typeof setTimeout> | null = null;
 
   // Initialize from writing data
@@ -30,7 +30,7 @@
       if (writing) {
         updateWriting(writing.id, { title, content });
       }
-      saveStatus = 'Draft saved';
+      saveStatus = 'Saved';
     }, 800);
   }
 
@@ -42,7 +42,6 @@
   function handleContentInput(e: Event) {
     const textarea = e.target as HTMLTextAreaElement;
     content = textarea.value;
-    // Auto-resize
     textarea.style.height = 'auto';
     textarea.style.height = textarea.scrollHeight + 'px';
     scheduleSave();
@@ -59,68 +58,99 @@
 </script>
 
 {#if writing}
-  <div class="min-h-full flex flex-col">
-    <!-- Top Bar - minimal -->
-    <div class="flex items-center justify-between mb-12">
+  <div style="display: flex; flex-direction: column; min-height: 100%;">
+    <!-- Top bar -->
+    <div style="display: flex; align-items: center; margin-bottom: 32px;">
       <a
         href="/writing"
-        class="inline-flex items-center gap-1.5 text-sm text-[#667788] hover:text-white transition-colors duration-200"
+        class="back-link"
+        style="display: inline-flex; align-items: center; gap: 6px; font-size: 11px; color: var(--text-tertiary); text-decoration: none;"
       >
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <polyline points="15 18 9 12 15 6" />
         </svg>
-        Back
+        Writing
       </a>
     </div>
 
     <!-- Editor -->
-    <div class="flex-1 flex flex-col items-center">
-      <div class="w-full max-w-[660px]">
+    <div style="flex: 1; display: flex; flex-direction: column; align-items: center;">
+      <div style="width: 100%; max-width: 600px;">
         <!-- Title -->
         <input
           type="text"
           value={title}
           oninput={handleTitleInput}
           placeholder="Title"
-          class="w-full bg-transparent text-[38px] font-bold text-white placeholder:text-[#334455] focus:outline-none mb-10 leading-[1.15] tracking-tight"
-          style="font-family: Charter, Georgia, 'Times New Roman', serif;"
+          style="
+            width: 100%;
+            background: transparent;
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+            border: none;
+            outline: none;
+            margin-bottom: 24px;
+            line-height: 1.4;
+            font-family: Georgia, Charter, 'Times New Roman', serif;
+            box-sizing: border-box;
+          "
         />
 
-        <!-- Content Textarea -->
+        <!-- Content -->
         <textarea
           value={content}
           oninput={handleContentInput}
           use:autoResize
           placeholder="Start writing..."
-          class="w-full bg-transparent text-[18px] text-[#CCDDEE] placeholder:text-[#334455] focus:outline-none resize-none leading-[1.75] min-h-[60vh]"
-          style="font-family: Charter, Georgia, 'Times New Roman', serif;"
+          style="
+            width: 100%;
+            background: transparent;
+            font-size: 16px;
+            color: var(--text-primary);
+            border: none;
+            outline: none;
+            resize: none;
+            line-height: 1.7;
+            min-height: 60vh;
+            font-family: Georgia, Charter, 'Times New Roman', serif;
+            box-sizing: border-box;
+          "
         ></textarea>
       </div>
     </div>
 
-    <!-- Status Bar -->
-    <div class="sticky bottom-0 left-0 right-0 flex items-center justify-between px-4 py-3 mt-8 border-t border-white/[0.04] bg-[#14181C]/80 backdrop-blur-sm">
-      <div class="flex items-center gap-4 text-xs text-[#556677]">
-        <span>{wordCount} {wordCount === 1 ? 'word' : 'words'}</span>
-        <span class="text-white/10">·</span>
-        <span>{readingTime} min read</span>
-      </div>
-      <div class="flex items-center gap-2 text-xs text-[#556677]">
-        {#if saveStatus === 'Draft saved'}
-          <span class="w-1.5 h-1.5 rounded-full bg-[#00E054] shadow-[0_0_6px_rgba(0,224,84,0.4)]"></span>
-        {/if}
-        <span>{saveStatus}</span>
-      </div>
+    <!-- Status bar -->
+    <div style="
+      position: sticky;
+      bottom: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 8px 0;
+      margin-top: 24px;
+      border-top: 1px solid var(--border);
+      background: var(--bg-base);
+    ">
+      <span style="font-size: 11px; color: var(--text-tertiary);">
+        {wordCount} words · {readingTime} min · {saveStatus}
+      </span>
     </div>
   </div>
 {:else}
-  <div class="flex flex-col items-center justify-center h-full">
-    <div class="w-16 h-16 rounded-full bg-white/[0.03] flex items-center justify-center mb-4">
-      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#556677" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M12 20h9" /><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
-      </svg>
-    </div>
-    <p class="text-[#778899] mb-3">Writing not found</p>
-    <a href="/writing" class="text-sm text-[#40BCF4] hover:underline">Back to writings</a>
+  <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 200px;">
+    <p style="font-size: 12px; color: var(--text-tertiary);">Writing not found</p>
+    <a href="/writing" style="font-size: 11px; color: var(--accent); text-decoration: none; margin-top: 8px;">Back to writings</a>
   </div>
 {/if}
+
+<style>
+  .back-link:hover {
+    color: var(--text-primary);
+  }
+
+  input::placeholder,
+  textarea::placeholder {
+    color: var(--text-muted);
+  }
+</style>

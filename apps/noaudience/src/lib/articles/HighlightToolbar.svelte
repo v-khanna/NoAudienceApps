@@ -15,12 +15,24 @@
 
 {#if visible}
   <div
-    class="fixed z-50 flex items-center gap-1.5 px-2 py-1.5 bg-[#2C3440] border border-white/[0.12] rounded-[8px] shadow-xl"
-    style="left: {x}px; top: {y}px; transform: translateX(-50%) translateY(-120%);"
+    style="
+      position: fixed;
+      z-index: 50;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 8px;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      left: {x}px;
+      top: {y}px;
+      transform: translateX(-50%) translateY(-120%);
+    "
   >
     {#each colors as [name, hex]}
       <button
-        class="w-7 h-7 rounded-full border-2 border-transparent hover:border-white/40 transition-colors cursor-pointer hover:scale-110"
+        class="color-btn"
         style="background-color: {hex};"
         title="Highlight {name}"
         onclick={() => onselect(name)}
@@ -28,3 +40,19 @@
     {/each}
   </div>
 {/if}
+
+<style>
+  .color-btn {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    border: 2px solid transparent;
+    cursor: pointer;
+    padding: 0;
+    transition: border-color 150ms ease-out;
+  }
+
+  .color-btn:hover {
+    border-color: rgba(255, 255, 255, 0.3);
+  }
+</style>
