@@ -4,7 +4,7 @@
   import TagInput from '@noaudience/core/components/TagInput.svelte';
   import Button from '@noaudience/core/components/Button.svelte';
   import { searchTmdb, type TmdbSearchResult } from './tmdb';
-  import { logFilm } from './db';
+  import { logFilm, addFilmFromTmdb } from './db';
 
   interface Props {
     open: boolean;
@@ -56,8 +56,10 @@
 
   function handleSave() {
     if (!selectedFilm) return;
+    // Add the TMDB film to local data first
+    const localFilm = addFilmFromTmdb(selectedFilm);
     logFilm({
-      filmId: selectedFilm.id,
+      filmId: localFilm.id,
       watchedDate,
       rating,
       liked,

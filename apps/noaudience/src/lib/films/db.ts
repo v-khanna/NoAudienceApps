@@ -25,6 +25,38 @@ export function getFilmById(id: number): Film | undefined {
   return _getFilmById(id);
 }
 
+export function addFilmFromTmdb(tmdbResult: {
+  id: number;
+  title: string;
+  year: number;
+  posterPath: string;
+  backdropPath: string;
+  overview: string;
+}): Film {
+  // Check if already exists
+  const existing = mockFilms.find((f) => f.tmdbId === tmdbResult.id);
+  if (existing) return existing;
+
+  const film: Film = {
+    id: mockFilms.length + 100,
+    tmdbId: tmdbResult.id,
+    title: tmdbResult.title,
+    year: tmdbResult.year,
+    director: '',
+    runtime: 0,
+    tagline: '',
+    synopsis: tmdbResult.overview,
+    posterPath: tmdbResult.posterPath,
+    backdropPath: tmdbResult.backdropPath,
+    genres: [],
+    cast: [],
+    crew: [],
+    createdAt: new Date().toISOString(),
+  };
+  mockFilms.push(film);
+  return film;
+}
+
 export function searchFilms(query: string): Film[] {
   const q = query.toLowerCase();
   return mockFilms.filter(
