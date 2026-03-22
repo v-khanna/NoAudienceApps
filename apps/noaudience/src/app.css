@@ -26,17 +26,46 @@
   --accent-muted: rgba(64, 188, 244, 0.15);
 }
 
-html {
-  font-size: 13px;
-}
-
 body {
   background: var(--bg-base);
   color: var(--text-primary);
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   overflow: hidden;
   letter-spacing: 0.01em;
+}
+
+/* Type scale */
+h1, .page-title { font-size: 20px; font-weight: 600; letter-spacing: -0.02em; color: var(--text-primary); }
+h2, .section-title { font-size: 15px; font-weight: 600; color: var(--text-primary); }
+.label { font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-tertiary); }
+
+/* Input defaults */
+input[type="text"], input[type="search"], input[type="date"], input[type="password"], textarea, select {
+  font-size: 14px;
+  height: 36px;
+  padding: 0 12px;
+  background: var(--bg-inset);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text-primary);
+  outline: none;
+  transition: border-color 150ms ease-out;
+}
+input:focus, textarea:focus, select:focus {
+  border-color: var(--accent);
+}
+textarea {
+  height: auto;
+  padding: 10px 12px;
+}
+
+/* Button defaults */
+button {
+  font-size: 14px;
+  cursor: pointer;
 }
 
 ::-webkit-scrollbar { width: 6px; }
