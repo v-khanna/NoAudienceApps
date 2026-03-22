@@ -31,6 +31,44 @@ export function getBookById(id: number): Book | undefined {
   return mockBooks.find((b) => b.id === id);
 }
 
+export function addBookFromOpenLibrary(result: {
+  id: string;
+  title: string;
+  author: string;
+  year: number;
+  coverUrl: string;
+  isbn: string;
+  pageCount: number;
+}): Book {
+  const existing = mockBooks.find((b) => b.isbn === result.isbn && result.isbn);
+  if (existing) return existing;
+
+  const book: Book = {
+    id: mockBooks.length + 100,
+    title: result.title,
+    author: result.author,
+    isbn: result.isbn,
+    pageCount: result.pageCount,
+    publisher: '',
+    publishDate: result.year ? `${result.year}` : '',
+    description: '',
+    genres: [],
+    coverPath: result.coverUrl,
+    createdAt: new Date().toISOString(),
+  };
+  mockBooks.push(book);
+
+  // Auto-assign to "Want to Read" shelf
+  mockShelfAssignments.push({
+    id: mockShelfAssignments.length + 100,
+    bookId: book.id,
+    shelfId: 1, // Want to Read
+    assignedAt: new Date().toISOString(),
+  });
+
+  return book;
+}
+
 export function searchBooks(query: string): Book[] {
   const q = query.toLowerCase();
   return mockBooks.filter(
