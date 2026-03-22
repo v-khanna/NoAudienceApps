@@ -9,6 +9,18 @@ export default defineConfig({
   ],
   server: {
     port: 5173,
-    strictPort: true
+    strictPort: true,
+    proxy: {
+      '/api/substack': {
+        target: 'https://virkhanna.substack.com',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/substack/, ''),
+      },
+      '/api/openlibrary': {
+        target: 'https://openlibrary.org',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/openlibrary/, ''),
+      },
+    },
   }
 });

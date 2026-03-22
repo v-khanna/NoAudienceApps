@@ -1,28 +1,28 @@
 <script lang="ts">
-  import { getRecentLogs } from '$lib/films/db';
-  import type { Film } from '$lib/films/mock';
+  import { onMount } from 'svelte';
+  import { getRecentLogs, type FilmLogWithFilm } from '$lib/films/db';
 
-  interface LogWithFilm {
-    id: number;
-    filmId: number;
-    watchedDate: string;
-    rating: number;
-    liked: boolean;
-    rewatch: boolean;
-    review: string;
-    tags: string[];
-    createdAt: string;
-    film: Film;
+  interface GroupedLogs {
+    label: string;
+    entries: FilmLogWithFilm[];
   }
 
-  let logs = $state(getRecentLogs(50));
+  let logs = $state<FilmLogWithFilm[]>([]);
 
-  let groupedLogs = $derived(() => {
-    const groups: { label: string; entries: LogWithFilm[] }[] = [];
-    const monthMap = new Map<string, LogWithFilm[]>();
+  onMount(async () => {
+    try {
+      logs = await getRecentLogs(50);
+    } catch (e: any) {
+      console.error('Failed to load diary:', e);
+    }
+  });
+
+  let groupedLogs = $derived.by(() => {
+    const groups: GroupedLogs[] = [];
+    const monthMap = new Map<string, FilmLogWithFilm[]>();
 
     for (const log of logs) {
-      const date = new Date(log.watchedDate);
+      const date = new Date(log.watchedDate ?? '');
       const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
       const label = date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
 
@@ -30,7 +30,7 @@
         monthMap.set(key, []);
         groups.push({ label, entries: monthMap.get(key)! });
       }
-      monthMap.get(key)!.push(log as LogWithFilm);
+      monthMap.get(key)!.push(log);
     }
 
     return groups;
@@ -39,15 +39,15 @@
   function ratingToStars(rating: number): string {
     const full = Math.floor(rating);
     const half = rating % 1 >= 0.5;
-    return '★'.repeat(full) + (half ? '½' : '');
+    return '\u2605'.repeat(full) + (half ? '\u00BD' : '');
   }
 </script>
 
 <div class="max-w-3xl">
-  <h1 style="font-size: 15px; font-weight: 600; color: var(--text-primary); margin-bottom: 24px;">Diary</h1>
+  <h1 style="font-size: 28px; font-weight: 700; color: var(--text-primary); margin-bottom: 32px;">Diary</h1>
 
-  {#each groupedLogs() as group}
-    <section style="margin-bottom: 24px;">
+  {#each groupedLogs as group}
+    <section style="margin-bottom: 32px;">
       <h2 class="month-header">{group.label}</h2>
       <div class="diary-table">
         {#each group.entries as entry, i}
@@ -57,7 +57,7 @@
             class:border-bottom={i < group.entries.length - 1}
           >
             <span class="diary-date">
-              {new Date(entry.watchedDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+              {new Date(entry.watchedDate ?? '').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
             </span>
             <img
               src={entry.film.posterPath}
@@ -66,9 +66,9 @@
             />
             <span class="diary-title">{entry.film.title}</span>
             <span class="diary-year">{entry.film.year}</span>
-            <span class="diary-rating">{ratingToStars(entry.rating)}</span>
+            <span class="diary-rating">{ratingToStars(entry.rating ?? 0)}</span>
             {#if entry.liked}
-              <span class="diary-liked">♥</span>
+              <span class="diary-liked">{'\u2665'}</span>
             {/if}
           </a>
         {/each}
@@ -77,7 +77,7 @@
   {/each}
 
   {#if logs.length === 0}
-    <div style="padding: 32px 0; color: var(--text-secondary); text-align: center;">
+    <div style="padding: 48px 0; color: var(--text-secondary); text-align: center; font-size: 15px;">
       No diary entries yet. Start logging films to build your viewing history.
     </div>
   {/if}
@@ -85,7 +85,7 @@
 
 <style>
   .month-header {
-    font-size: 11px;
+    font-size: 13px;
     text-transform: uppercase;
     letter-spacing: 0.05em;
     color: var(--text-tertiary);
@@ -103,9 +103,9 @@
     display: flex;
     align-items: center;
     gap: 12px;
-    height: 32px;
+    height: 48px;
     padding: 0 12px;
-    font-size: 13px;
+    font-size: 15px;
     text-decoration: none;
     color: inherit;
     transition: background-color 150ms ease-out;
@@ -119,13 +119,14 @@
 
   .diary-date {
     color: var(--text-secondary);
-    width: 64px;
+    font-size: 13px;
+    width: 72px;
     flex-shrink: 0;
   }
 
   .diary-poster {
-    width: 24px;
-    height: 24px;
+    width: 28px;
+    height: 42px;
     object-fit: cover;
     border-radius: 2px;
     border: 1px solid var(--border);
@@ -143,6 +144,7 @@
 
   .diary-year {
     color: var(--text-tertiary);
+    font-size: 13px;
     flex-shrink: 0;
   }
 

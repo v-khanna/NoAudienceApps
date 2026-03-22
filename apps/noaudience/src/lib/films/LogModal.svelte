@@ -25,6 +25,7 @@
   let selectedFilm = $state<TmdbSearchResult | null>(null);
   let showResults = $state(false);
   let searching = $state(false);
+  let errorMsg = $state('');
   let debounceTimer: ReturnType<typeof setTimeout>;
 
   function handleInput() {
@@ -38,8 +39,10 @@
     searching = true;
     debounceTimer = setTimeout(async () => {
       try {
+        errorMsg = '';
         searchResults = await searchTmdb(filmQuery);
-      } catch (e) {
+      } catch (e: any) {
+        errorMsg = `Search failed: ${e?.message || e}`;
         console.error('TMDB search failed:', e);
         searchResults = [];
       }
@@ -53,21 +56,27 @@
     showResults = false;
   }
 
-  function handleSave() {
+  async function handleSave() {
     if (!selectedFilm) return;
-    const localFilm = addFilmFromTmdb(selectedFilm);
-    logFilm({
-      filmId: localFilm.id,
-      watchedDate,
-      rating,
-      liked,
-      rewatch,
-      review,
-      tags,
-    });
-    resetForm();
-    onsave?.();
-    onclose();
+    try {
+      errorMsg = '';
+      const localFilm = await addFilmFromTmdb(selectedFilm);
+      await logFilm({
+        filmId: localFilm.id,
+        watchedDate,
+        rating,
+        liked,
+        rewatch,
+        review,
+        tags,
+      });
+      resetForm();
+      onsave?.();
+      onclose();
+    } catch (e: any) {
+      errorMsg = `Save failed: ${e?.message || e}`;
+      console.error('Save failed:', e);
+    }
   }
 
   function resetForm() {
@@ -97,7 +106,10 @@
         class="field-input"
       />
       {#if searching}
-        <div style="position: absolute; right: 8px; top: 28px; color: var(--text-tertiary); font-size: 13px;">Searching...</div>
+        <div style="position: absolute; right: 8px; top: 30px; color: var(--text-tertiary); font-size: 13px;">Searching...</div>
+      {/if}
+      {#if errorMsg}
+        <div style="margin-top: 8px; padding: 8px 12px; background: rgba(255,0,0,0.1); border: 1px solid rgba(255,0,0,0.3); border-radius: 6px; color: #ff6b6b; font-size: 13px;">{errorMsg}</div>
       {/if}
       {#if showResults && searchResults.length > 0}
         <div class="search-dropdown">
@@ -112,8 +124,8 @@
                 <div class="result-poster-placeholder">?</div>
               {/if}
               <div class="min-w-0">
-                <div style="color: var(--text-primary);">{film.title}</div>
-                <div style="color: var(--text-tertiary);">{film.year || 'Unknown year'}</div>
+                <div style="font-size: 15px; color: var(--text-primary);">{film.title}</div>
+                <div style="font-size: 13px; color: var(--text-tertiary);">{film.year || 'Unknown year'}</div>
               </div>
             </button>
           {/each}
@@ -128,7 +140,7 @@
           <img src={selectedFilm.posterPath} alt="" style="width: 40px; height: 60px; object-fit: cover; border-radius: 4px; border: 1px solid var(--border);" />
         {/if}
         <div class="min-w-0" style="flex: 1;">
-          <div style="font-size: 13px; font-weight: 500; color: var(--text-primary);">{selectedFilm.title}</div>
+          <div style="font-size: 15px; font-weight: 500; color: var(--text-primary);">{selectedFilm.title}</div>
           <div style="font-size: 13px; color: var(--text-tertiary);">{selectedFilm.year}</div>
         </div>
       </div>
@@ -159,14 +171,14 @@
         class:active={liked}
         onclick={() => liked = !liked}
       >
-        {liked ? '♥' : '♡'} Like
+        {liked ? '\u2665' : '\u2661'} Like
       </button>
       <button
         class="toggle-btn"
         class:active={rewatch}
         onclick={() => rewatch = !rewatch}
       >
-        ↻ Rewatch
+        \u21BB Rewatch
       </button>
     </div>
 
@@ -204,13 +216,13 @@
 
   .field-input {
     width: 100%;
-    height: 32px;
+    height: 40px;
     padding: 0 8px;
     background: var(--bg-inset);
     border: 1px solid var(--border);
     border-radius: 4px;
     color: var(--text-primary);
-    font-size: 13px;
+    font-size: 15px;
     outline: none;
   }
   .field-input:focus {
@@ -224,7 +236,7 @@
     border: 1px solid var(--border);
     border-radius: 4px;
     color: var(--text-primary);
-    font-size: 13px;
+    font-size: 15px;
     outline: none;
     resize: none;
   }
@@ -244,7 +256,7 @@
     background: var(--bg-elevated);
     border: 1px solid var(--border);
     border-radius: 4px;
-    max-height: 240px;
+    max-height: 300px;
     overflow-y: auto;
   }
 
@@ -253,9 +265,9 @@
     text-align: left;
     display: flex;
     align-items: center;
-    gap: 8px;
-    padding: 8px;
-    font-size: 13px;
+    gap: 10px;
+    padding: 8px 10px;
+    font-size: 15px;
     background: none;
     border: none;
     border-bottom: 1px solid var(--border-subtle);
@@ -288,15 +300,15 @@
     align-items: center;
     justify-content: center;
     color: var(--text-muted);
-    font-size: 13px;
+    font-size: 15px;
     flex-shrink: 0;
   }
 
   .selected-preview {
     display: flex;
-    gap: 8px;
+    gap: 10px;
     align-items: center;
-    padding: 8px;
+    padding: 10px;
     background: var(--bg-surface);
     border: 1px solid var(--border);
     border-radius: 4px;
@@ -307,7 +319,7 @@
     border: none;
     color: var(--text-secondary);
     cursor: pointer;
-    font-size: 13px;
+    font-size: 15px;
     padding: 4px 0;
     transition: color 150ms ease-out;
   }
@@ -323,9 +335,9 @@
     color: #000;
     border: none;
     border-radius: 4px;
-    height: 28px;
-    padding: 0 12px;
-    font-size: 13px;
+    height: 40px;
+    padding: 0 16px;
+    font-size: 15px;
     font-weight: 500;
     cursor: pointer;
     transition: opacity 150ms ease-out;

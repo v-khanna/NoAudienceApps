@@ -18,9 +18,9 @@
   style="
     display: flex;
     align-items: center;
-    height: 28px;
-    padding: 0 12px;
-    font-size: {indent ? '11px' : '12px'};
+    height: 36px;
+    padding: 0 16px;
+    font-size: {indent ? '13px' : '14px'};
     font-weight: 500;
     color: {active ? 'var(--text-primary)' : 'var(--text-secondary)'};
     background: transparent;

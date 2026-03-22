@@ -25,6 +25,22 @@
   },
   "dependencies": {
     "@noaudience/core": "workspace:*",
-    "@tauri-apps/api": "^2.3.0"
+    "@tauri-apps/api": "^2.3.0",
+    "@tauri-apps/plugin-sql": "^2.3.2",
+    "@tiptap/core": "^3.20.4",
+    "@tiptap/extension-code-block-lowlight": "^3.20.4",
+    "@tiptap/extension-highlight": "^3.20.4",
+    "@tiptap/extension-image": "^3.20.4",
+    "@tiptap/extension-link": "^3.20.4",
+    "@tiptap/extension-placeholder": "^3.20.4",
+    "@tiptap/extension-task-item": "^3.20.4",
+    "@tiptap/extension-task-list": "^3.20.4",
+    "@tiptap/extension-typography": "^3.20.4",
+    "@tiptap/pm": "^3.20.4",
+    "@tiptap/starter-kit": "^3.20.4",
+    "chess.js": "^1.4.0",
+    "chessground": "^9.2.1",
+    "drizzle-orm": "^0.45.1",
+    "lowlight": "^3.3.0"
   }
 }

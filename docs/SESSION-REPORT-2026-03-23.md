@@ -1,5 +1,9 @@
 # Session Report — 2026-03-23: Production-Ready Attempt
 
+## STATUS: NOTHING WORKS
+
+The core database operations fail at runtime. Films cannot be saved. Books cannot be added. The fundamental issue — Drizzle ORM's JSON column handling through the sqlite-proxy → tauri-plugin-sql bridge — was never resolved despite multiple attempts. See "The Unsolved Problem" below.
+
 ## Goal
 
 Take the NoAudience app from a visual prototype with mock in-memory data to a fully functional desktop app with real database persistence, working APIs, rich text editing, and interactive chess board.
@@ -165,12 +169,67 @@ Dispatched 5 parallel agents to rewrite each module's data layer:
 
 8. **To run the app:** `cd /Users/adaa/Code/NoAudienceApps && export PATH="$HOME/.cargo/bin:$PATH" && ./apps/noaudience/node_modules/.bin/tauri dev`
 
+## The Unsolved Problem
+
+**Error:** `JSON Parse error: Unexpected identifier "undefined"`
+**Stack:** `mapResultRow (drizzle-orm/utils.ts:23)` → `JSON.parse()` on a column value that is the string `"undefined"`
+
+This error happens every time a Drizzle SELECT touches a table with JSON columns (`text('col', { mode: 'json' })`). The exact chain:
+
+1. Drizzle sends a SELECT query through the sqlite-proxy callback
+2. The callback calls `tauriDb.select()` (tauri-plugin-sql)
+3. tauri-plugin-sql returns rows where some column values are JS `undefined` (for NULL columns or empty JSON)
+4. Drizzle's `mapResultRow` calls `JSON.parse(value)` on JSON-mode columns
+5. `JSON.parse(undefined)` → JS coerces `undefined` to the string `"undefined"` → `SyntaxError: Unexpected identifier "undefined"`
+
+**Attempts to fix (all failed):**
+
+1. **Sanitize params (undefined → null):** Added `sanitizeParams()` in the bridge. Didn't help because the problem is in the RESULTS, not the params.
+
+2. **Sanitize results (undefined → null):** Added `sanitizeRows()` to convert undefined values to null in result rows. The fix is logically correct but either:
+   - Hot-reload doesn't pick up changes to db.ts (it's loaded at app init via onMount)
+   - Or the undefined values are coming from somewhere else in Drizzle's processing pipeline
+   - Or tauri-plugin-sql doesn't return plain objects with undefined values — it might return something else entirely
+
+3. **Double JSON.stringify:** Manually called `JSON.stringify([])` before passing to Drizzle, which then double-stringified. Made things worse.
+
+4. **Remove .returning():** Removed all `.returning()` calls (28+) and replaced with separate SELECT. Didn't fix the core issue because the SELECT itself triggers the JSON.parse crash.
+
+5. **Raw SQL bypass:** Rewrote addFilmFromTmdb to use raw SQL via `tauriDb.execute()` + `tauriDb.select()` directly. This approach should work but was reverted before proper testing.
+
+**What the next agent should try:**
+
+1. **Use raw SQL for everything** — bypass Drizzle entirely. Write a thin wrapper around `tauriDb.execute()` and `tauriDb.select()` with manual SQL. This is the nuclear option but will definitely work because it removes Drizzle's JSON processing from the equation.
+
+2. **Change the schema** — remove `{ mode: 'json' }` from all JSON columns in `packages/core/src/db/schema.ts`. Make them plain `text()` columns. Handle JSON.stringify/parse manually in each module's db.ts. This keeps Drizzle but removes its JSON processing.
+
+3. **Debug the actual tauriDb.select() return value** — add `console.log(JSON.stringify(rows[0]))` right after `tauriDb.select()` in db.ts to see what tauri-plugin-sql actually returns. The bridge sanitization may not be working because the rows aren't plain objects.
+
+4. **Try a different Drizzle driver** — `better-sqlite3` with Tauri's custom protocol, or `sql.js` (WASM SQLite) which runs entirely in the browser and doesn't need Tauri IPC at all.
+
+**Tables with JSON columns (the problematic ones):**
+- `films` — genres, cast, crew
+- `film_logs` — tags
+- `books` — genres
+- `writings` — tags
+- `chess_games` — annotations
+
+Tables WITHOUT JSON columns work fine through Drizzle (settings, book_shelves, book_shelf_assignments, etc.).
+
 ## Current Status
 
-The app compiles with zero errors (only a11y warnings). The database bridge is connected. Settings seed on startup. But the end-to-end flows (add film, add book, sync articles) need manual verification — each has been fixed multiple times but may still have issues due to the cascading nature of the `.returning()` bug and the JSON column serialization.
+**The app compiles with zero errors.** The UI is built and scaled up. The APIs (TMDB, Open Library, Substack RSS) work. The TipTap editor and chessground board are installed. But no data can be saved to the database because every INSERT followed by a SELECT on a table with JSON columns crashes.
 
-The most reliable way to verify is to delete the database, restart the app, and test each flow:
+The most promising path forward is option 1 or 2 above — either bypass Drizzle entirely or remove its JSON mode.
+
+To run the app:
+```bash
+cd /Users/adaa/Code/NoAudienceApps
+export PATH="$HOME/.cargo/bin:$PATH"
+./apps/noaudience/node_modules/.bin/tauri dev
+```
+
+To reset the database:
 ```bash
 rm ~/Library/Application\ Support/com.noaudience.app/noaudience.db
-# Then restart the app
 ```

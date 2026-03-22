@@ -1,36 +1,48 @@
 <script lang="ts">
+  import { onMount } from 'svelte';
   import { goto } from '$app/navigation';
   import SearchBar from '@noaudience/core/components/SearchBar.svelte';
-  import { getAllWritings, createWriting } from '$lib/writing/db.svelte';
+  import { getAllWritings, createWriting, searchWritings, type Writing } from '$lib/writing/db';
 
   let searchQuery = $state('');
+  let allWritings = $state<Writing[]>([]);
+  let loading = $state(true);
 
-  let allWritings = $derived(getAllWritings());
+  onMount(async () => {
+    try {
+      allWritings = await getAllWritings();
+    } catch (e: any) {
+      console.error('Failed to load writings:', e);
+    } finally {
+      loading = false;
+    }
+  });
 
   let filteredWritings = $derived.by(() => {
-    let result = allWritings;
-
-    if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase();
-      result = result.filter(
-        (w) =>
-          w.title.toLowerCase().includes(q) ||
-          w.excerpt.toLowerCase().includes(q) ||
-          w.tags.some((t) => t.toLowerCase().includes(q))
-      );
-    }
-
-    return [...result].sort((a, b) =>
-      new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+    if (!searchQuery.trim()) return allWritings;
+    const q = searchQuery.toLowerCase();
+    return allWritings.filter(
+      (w) =>
+        w.title.toLowerCase().includes(q) ||
+        ((w.tags as string[]) ?? []).some((t: string) => t.toLowerCase().includes(q))
     );
   });
 
-  function handleNew() {
-    const writing = createWriting();
+  async function handleSearch() {
+    if (searchQuery.trim()) {
+      allWritings = await searchWritings(searchQuery);
+    } else {
+      allWritings = await getAllWritings();
+    }
+  }
+
+  async function handleNew() {
+    const writing = await createWriting();
     goto(`/writing/${writing.id}`);
   }
 
-  function formatDate(iso: string): string {
+  function formatDate(iso: string | null): string {
+    if (!iso) return '';
     return new Date(iso).toLocaleDateString('en-US', {
       month: 'short',
       day: 'numeric',
@@ -39,9 +51,9 @@
 </script>
 
 <!-- Header -->
-<div style="display: flex; align-items: center; gap: 12px; margin-bottom: 24px;">
-  <h1 style="font-size: 15px; font-weight: 600; color: var(--text-primary); margin: 0;">Writing</h1>
-  <div style="width: 200px;">
+<div style="display: flex; align-items: center; gap: 16px; margin-bottom: 36px;">
+  <h1 style="font-size: 28px; font-weight: 700; color: var(--text-primary); margin: 0;">Writing</h1>
+  <div style="width: 260px;">
     <SearchBar bind:value={searchQuery} placeholder="Search writings..." />
   </div>
   <div style="flex: 1;"></div>
@@ -49,9 +61,13 @@
 </div>
 
 <!-- Writings List -->
-{#if filteredWritings.length === 0}
+{#if loading}
   <div style="padding: 48px 0; text-align: center;">
-    <p style="font-size: 12px; color: var(--text-tertiary);">
+    <p style="font-size: 15px; color: var(--text-tertiary);">Loading...</p>
+  </div>
+{:else if filteredWritings.length === 0}
+  <div style="padding: 48px 0; text-align: center;">
+    <p style="font-size: 15px; color: var(--text-tertiary);">
       {searchQuery ? 'No writings found' : 'No writings yet'}
     </p>
   </div>
@@ -64,26 +80,23 @@
         style="
           display: flex;
           align-items: center;
-          gap: 12px;
-          height: 44px;
-          padding: 0 8px;
+          gap: 16px;
+          height: 60px;
+          padding: 0 12px;
           text-decoration: none;
           border-bottom: {i < filteredWritings.length - 1 ? '1px solid var(--border-subtle)' : 'none'};
           transition: background 150ms ease-out;
         "
       >
         <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px;">
-          <span style="font-size: 13px; font-weight: 600; color: var(--text-primary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+          <span style="font-size: 16px; font-weight: 600; color: var(--text-primary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
             {writing.title}
           </span>
-          <span style="font-size: 11px; color: var(--text-tertiary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
-            {writing.excerpt}
-          </span>
         </div>
-        <span style="font-size: 11px; color: var(--text-tertiary); flex-shrink: 0;">
-          {writing.wordCount}w
+        <span style="font-size: 13px; color: var(--text-tertiary); flex-shrink: 0;">
+          {writing.wordCount ?? 0}w
         </span>
-        <span style="font-size: 11px; color: var(--text-tertiary); flex-shrink: 0;">
+        <span style="font-size: 13px; color: var(--text-tertiary); flex-shrink: 0;">
           {formatDate(writing.updatedAt)}
         </span>
       </a>
@@ -93,9 +106,9 @@
 
 <style>
   .header-btn {
-    height: 32px;
-    padding: 0 12px;
-    font-size: 12px;
+    height: 40px;
+    padding: 0 16px;
+    font-size: 15px;
     font-weight: 500;
     color: var(--accent);
     background: transparent;

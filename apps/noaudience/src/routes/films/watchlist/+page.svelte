@@ -1,13 +1,28 @@
 <script lang="ts">
-  import { getWatchlist } from '$lib/films/db';
+  import { getWatchlist, type WatchlistEntryWithFilm } from '$lib/films/db';
 
   let sortBy = $state<'added' | 'title' | 'year'>('added');
-  let watchlist = $derived(getWatchlist(sortBy));
+  let watchlist = $state<WatchlistEntryWithFilm[]>([]);
+
+  async function loadWatchlist() {
+    try {
+      watchlist = await getWatchlist(sortBy);
+    } catch (e: any) {
+      console.error('Failed to load watchlist:', e);
+    }
+  }
+
+  // Load on mount and reload when sort changes
+  $effect(() => {
+    // Access sortBy to create the dependency
+    const _sort = sortBy;
+    loadWatchlist();
+  });
 </script>
 
 <div class="max-w-4xl">
-  <div class="flex items-center gap-12" style="margin-bottom: 24px;">
-    <h1 style="font-size: 15px; font-weight: 600; color: var(--text-primary);">Watchlist</h1>
+  <div class="flex items-center gap-12" style="margin-bottom: 32px;">
+    <h1 style="font-size: 28px; font-weight: 700; color: var(--text-primary);">Watchlist</h1>
     <select
       bind:value={sortBy}
       class="sort-select"
@@ -33,7 +48,7 @@
       {/each}
     </div>
   {:else}
-    <div style="padding: 32px 0; color: var(--text-secondary); text-align: center;">
+    <div style="padding: 48px 0; color: var(--text-secondary); text-align: center; font-size: 15px;">
       Your watchlist is empty. Add films you want to watch later.
     </div>
   {/if}
@@ -45,9 +60,9 @@
     border: 1px solid var(--border);
     border-radius: 4px;
     padding: 0 8px;
-    height: 28px;
+    height: 40px;
     color: var(--text-secondary);
-    font-size: 13px;
+    font-size: 15px;
     cursor: pointer;
     appearance: none;
     outline: none;
@@ -58,8 +73,8 @@
 
   .poster-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, 120px);
-    gap: 12px;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 16px;
   }
 
   .poster-item {
@@ -68,7 +83,7 @@
   }
 
   .poster-img {
-    width: 120px;
+    width: 100%;
     aspect-ratio: 2/3;
     object-fit: cover;
     border-radius: 4px;

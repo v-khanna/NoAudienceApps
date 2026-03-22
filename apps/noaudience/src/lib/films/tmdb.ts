@@ -2,9 +2,22 @@
  * TMDB API integration for film search and metadata.
  */
 
+import { getSetting } from '$lib/settings';
+
 const TMDB_BASE = 'https://api.themoviedb.org/3';
 const TMDB_IMAGE_BASE = 'https://image.tmdb.org/t/p';
-const TMDB_ACCESS_TOKEN = 'eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIyNjg3ODQzOTQ2MzNhZTJhNDFmZDcyMGJhMWUxYzI0OSIsIm5iZiI6MTc3NDE2MjY0MC43MSwic3ViIjoiNjliZjkyZDAxYjU5MGE4NmM0MDFjODg0Iiwic2NvcGVzIjpbImFwaV9yZWFkIl0sInZlcnNpb24iOjF9.-BHinys3dbMpvIOzcZpC-LYvLSoslw79ZqbdrC7bIDA';
+
+// Fallback token used if settings DB hasn't been seeded yet
+const FALLBACK_TOKEN = 'eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIyNjg3ODQzOTQ2MzNhZTJhNDFmZDcyMGJhMWUxYzI0OSIsIm5iZiI6MTc3NDE2MjY0MC43MSwic3ViIjoiNjliZjkyZDAxYjU5MGE4NmM0MDFjODg0Iiwic2NvcGVzIjpbImFwaV9yZWFkIl0sInZlcnNpb24iOjF9.-BHinys3dbMpvIOzcZpC-LYvLSoslw79ZqbdrC7bIDA';
+
+async function getTmdbToken(): Promise<string> {
+  try {
+    const token = await getSetting('tmdb_api_key');
+    return token || FALLBACK_TOKEN;
+  } catch {
+    return FALLBACK_TOKEN;
+  }
+}
 
 export interface TmdbSearchResult {
   id: number;
@@ -33,12 +46,13 @@ export interface TmdbFilmDetail {
 }
 
 async function tmdbFetch(endpoint: string, params: Record<string, string> = {}) {
+  const token = await getTmdbToken();
   const url = new URL(`${TMDB_BASE}${endpoint}`);
   Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v));
 
   const res = await fetch(url.toString(), {
     headers: {
-      Authorization: `Bearer ${TMDB_ACCESS_TOKEN}`,
+      Authorization: `Bearer ${token}`,
       'Content-Type': 'application/json',
     },
   });

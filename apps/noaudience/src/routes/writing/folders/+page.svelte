@@ -1,88 +1,58 @@
 <script lang="ts">
-  import { getAllFolders, createFolder } from '$lib/writing/db.svelte';
+  import { onMount } from 'svelte';
+  import { getAllFolders, type WritingFolder } from '$lib/writing/db';
 
-  let folders = $derived(getAllFolders());
-  let showNewInput = $state(false);
-  let newFolderName = $state('');
+  let folders = $state<WritingFolder[]>([]);
+  let loading = $state(true);
 
-  function handleCreateFolder() {
-    const name = newFolderName.trim();
-    if (name) {
-      createFolder(name);
-      newFolderName = '';
-      showNewInput = false;
+  onMount(async () => {
+    try {
+      folders = await getAllFolders();
+    } catch (e: any) {
+      console.error('Failed to load folders:', e);
+    } finally {
+      loading = false;
     }
-  }
-
-  function handleKeydown(e: KeyboardEvent) {
-    if (e.key === 'Enter') {
-      handleCreateFolder();
-    } else if (e.key === 'Escape') {
-      showNewInput = false;
-      newFolderName = '';
-    }
-  }
+  });
 </script>
 
 <!-- Header -->
-<div style="display: flex; align-items: center; gap: 12px; margin-bottom: 24px;">
-  <a href="/writing" class="back-link" style="font-size: 11px; color: var(--text-tertiary); text-decoration: none;">
-    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle;">
+<div style="display: flex; align-items: center; gap: 16px; margin-bottom: 36px;">
+  <a href="/writing" class="back-link" style="font-size: 13px; color: var(--text-tertiary); text-decoration: none;">
+    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle;">
       <polyline points="15 18 9 12 15 6" />
     </svg>
   </a>
-  <h1 style="font-size: 15px; font-weight: 600; color: var(--text-primary); margin: 0;">Folders</h1>
+  <h1 style="font-size: 28px; font-weight: 700; color: var(--text-primary); margin: 0;">Folders</h1>
   <div style="flex: 1;"></div>
-  <button class="header-btn" onclick={() => (showNewInput = true)}>New Folder</button>
+  <span style="font-size: 13px; color: var(--text-tertiary);">{folders.length} folders</span>
 </div>
 
-<!-- New folder input -->
-{#if showNewInput}
-  <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 20px;">
-    <input
-      type="text"
-      bind:value={newFolderName}
-      onkeydown={handleKeydown}
-      placeholder="Folder name..."
-      style="
-        flex: 1;
-        height: 32px;
-        padding: 0 12px;
-        font-size: 12px;
-        background: var(--bg-inset);
-        border: 1px solid var(--border);
-        border-radius: 4px;
-        color: var(--text-primary);
-        outline: none;
-      "
-      autofocus
-    />
-    <button class="header-btn" style="color: var(--accent);" onclick={handleCreateFolder}>Create</button>
-    <button class="header-btn" onclick={() => { showNewInput = false; newFolderName = ''; }}>Cancel</button>
-  </div>
-{/if}
-
-{#if folders.length === 0 && !showNewInput}
+{#if loading}
   <div style="padding: 48px 0; text-align: center;">
-    <p style="font-size: 12px; color: var(--text-tertiary);">No folders yet</p>
+    <p style="font-size: 15px; color: var(--text-tertiary);">Loading...</p>
+  </div>
+{:else if folders.length === 0}
+  <div style="padding: 48px 0; text-align: center;">
+    <p style="font-size: 15px; color: var(--text-tertiary);">No folders yet. Assign a folder to a writing to create one.</p>
   </div>
 {:else}
   <div>
-    {#each folders as folder, i (folder.id)}
+    {#each folders as folder, i}
       <div
         class="folder-row"
         style="
           display: flex;
           align-items: center;
-          gap: 12px;
-          height: 36px;
-          padding: 0 8px;
+          gap: 16px;
+          height: 52px;
+          padding: 0 12px;
           border-bottom: {i < folders.length - 1 ? '1px solid var(--border-subtle)' : 'none'};
           transition: background 150ms ease-out;
         "
       >
-        <span style="font-size: 12px; color: var(--text-primary); flex: 1;">{folder.name}</span>
-        <span style="font-size: 11px; color: var(--text-tertiary);">{folder.writingCount}</span>
+        <span style="font-size: 15px; color: var(--text-primary); flex: 1;">{folder.name}</span>
+        <span style="font-size: 13px; color: var(--text-tertiary);">{folder.writingCount}</span>
       </div>
     {/each}
   </div>
@@ -91,23 +61,6 @@
 <style>
   .back-link:hover {
     color: var(--text-secondary);
-  }
-
-  .header-btn {
-    height: 32px;
-    padding: 0 12px;
-    font-size: 12px;
-    font-weight: 500;
-    color: var(--text-secondary);
-    background: transparent;
-    border: 1px solid var(--border);
-    border-radius: 4px;
-    cursor: pointer;
-    transition: background 150ms ease-out;
-  }
-
-  .header-btn:hover {
-    background: rgba(255, 255, 255, 0.03);
   }
 
   .folder-row:hover {

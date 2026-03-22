@@ -1,18 +1,27 @@
 <script lang="ts">
+  import { onMount } from 'svelte';
   import Modal from '@noaudience/core/components/Modal.svelte';
-  import { getLists, createList } from '$lib/films/db';
+  import { getLists, createList, type FilmListWithFilms } from '$lib/films/db';
 
-  let lists = $state(getLists());
+  let lists = $state<FilmListWithFilms[]>([]);
   let showNewListModal = $state(false);
 
   let newTitle = $state('');
   let newDescription = $state('');
   let newRanked = $state(false);
 
-  function handleCreateList() {
+  onMount(async () => {
+    try {
+      lists = await getLists();
+    } catch (e: any) {
+      console.error('Failed to load lists:', e);
+    }
+  });
+
+  async function handleCreateList() {
     if (!newTitle.trim()) return;
-    createList(newTitle.trim(), newDescription.trim(), newRanked);
-    lists = getLists();
+    await createList(newTitle.trim(), newDescription.trim(), newRanked);
+    lists = await getLists();
     newTitle = '';
     newDescription = '';
     newRanked = false;
@@ -21,8 +30,8 @@
 </script>
 
 <div class="max-w-3xl">
-  <div class="flex items-center gap-12" style="margin-bottom: 24px;">
-    <h1 style="font-size: 15px; font-weight: 600; color: var(--text-primary);">Lists</h1>
+  <div class="flex items-center gap-12" style="margin-bottom: 32px;">
+    <h1 style="font-size: 28px; font-weight: 700; color: var(--text-primary);">Lists</h1>
     <button class="new-list-btn" onclick={() => showNewListModal = true}>+ New List</button>
   </div>
 
@@ -32,7 +41,7 @@
         <div class="list-row" class:border-bottom={i < lists.length - 1}>
           <div class="flex-1 min-w-0">
             <div class="flex items-center gap-8">
-              <span style="font-size: 13px; font-weight: 600; color: var(--text-primary);">{list.title}</span>
+              <span style="font-size: 15px; font-weight: 600; color: var(--text-primary);">{list.title}</span>
               <span style="font-size: 13px; color: var(--text-tertiary);">{list.films.length} {list.films.length === 1 ? 'film' : 'films'}</span>
             </div>
           </div>
@@ -51,7 +60,7 @@
       {/each}
     </div>
   {:else}
-    <div style="padding: 32px 0; color: var(--text-secondary); text-align: center;">
+    <div style="padding: 48px 0; color: var(--text-secondary); text-align: center; font-size: 15px;">
       No lists yet. Create one to curate your films.
     </div>
   {/if}
@@ -86,7 +95,7 @@
         bind:checked={newRanked}
         style="accent-color: var(--accent);"
       />
-      <span style="font-size: 13px; color: var(--text-primary);">Ranked list</span>
+      <span style="font-size: 15px; color: var(--text-primary);">Ranked list</span>
     </label>
 
     <div class="flex justify-end">
@@ -101,7 +110,7 @@
     border: none;
     color: var(--accent);
     cursor: pointer;
-    font-size: 13px;
+    font-size: 15px;
     padding: 4px 0;
     transition: color 150ms ease-out;
   }
@@ -119,7 +128,7 @@
     display: flex;
     align-items: center;
     gap: 16px;
-    padding: 12px;
+    padding: 14px;
     transition: background-color 150ms ease-out;
     cursor: pointer;
   }
@@ -137,8 +146,8 @@
   }
 
   .preview-poster {
-    width: 24px;
-    height: 36px;
+    width: 28px;
+    height: 42px;
     object-fit: cover;
     border-radius: 2px;
     border: 1px solid var(--border);
@@ -153,13 +162,13 @@
 
   .field-input {
     width: 100%;
-    height: 32px;
+    height: 40px;
     padding: 0 8px;
     background: var(--bg-inset);
     border: 1px solid var(--border);
     border-radius: 4px;
     color: var(--text-primary);
-    font-size: 13px;
+    font-size: 15px;
     outline: none;
   }
   .field-input:focus {
@@ -173,7 +182,7 @@
     border: 1px solid var(--border);
     border-radius: 4px;
     color: var(--text-primary);
-    font-size: 13px;
+    font-size: 15px;
     outline: none;
     resize: none;
   }
@@ -186,9 +195,9 @@
     color: #000;
     border: none;
     border-radius: 4px;
-    height: 28px;
-    padding: 0 12px;
-    font-size: 13px;
+    height: 40px;
+    padding: 0 16px;
+    font-size: 15px;
     font-weight: 500;
     cursor: pointer;
     transition: opacity 150ms ease-out;

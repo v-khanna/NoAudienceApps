@@ -1,129 +1,140 @@
-// Articles CRUD functions (mock implementation — no real DB calls yet)
+// Articles data layer — real Drizzle queries against SQLite
 
-import {
-  mockArticles,
-  mockHighlights,
-  mockFeeds,
-  type Article,
-  type Highlight,
-  type Feed,
-} from './mock';
+import { getDb } from '$lib/db';
+import { articles, feeds, highlights } from '@noaudience/core/db/schema';
+import { eq, like, or, desc } from 'drizzle-orm';
 
-// ─── Articles ─────────────────────────────────────────────────────────────
+// ─── Article types ──────────────────────────────────────────────────────────
 
-let articles = $state<Article[]>([...mockArticles]);
-let highlights = $state<Highlight[]>([...mockHighlights]);
-let feeds = $state<Feed[]>([...mockFeeds]);
+export type Article = typeof articles.$inferSelect;
+export type NewArticle = typeof articles.$inferInsert;
+export type Highlight = typeof highlights.$inferSelect;
+export type NewHighlight = typeof highlights.$inferInsert;
+export type Feed = typeof feeds.$inferSelect;
+export type NewFeed = typeof feeds.$inferInsert;
 
-export function getAllArticles(): Article[] {
-  return articles;
+// ─── Articles ───────────────────────────────────────────────────────────────
+
+export async function getAllArticles(): Promise<Article[]> {
+  const db = getDb();
+  return db.select().from(articles).orderBy(desc(articles.createdAt));
 }
 
-export function getArticleById(id: number): Article | undefined {
-  return articles.find((a) => a.id === id);
+export async function getArticleById(id: number): Promise<Article | undefined> {
+  const db = getDb();
+  const rows = await db.select().from(articles).where(eq(articles.id, id));
+  return rows[0];
 }
 
-export function getOwnPosts(): Article[] {
-  return articles.filter((a) => a.isOwnPost);
+export async function getOwnPosts(): Promise<Article[]> {
+  const db = getDb();
+  return db.select().from(articles).where(eq(articles.isOwnPost, true)).orderBy(desc(articles.datePublished));
 }
 
-export function getSavedArticles(): Article[] {
-  return articles.filter((a) => !a.isOwnPost);
+export async function getSavedArticles(): Promise<Article[]> {
+  const db = getDb();
+  return db.select().from(articles).where(eq(articles.isOwnPost, false)).orderBy(desc(articles.createdAt));
 }
 
-export function getArticlesByFeed(feedId: number): Article[] {
-  return articles.filter((a) => a.feedId === feedId);
+export async function searchArticles(query: string): Promise<Article[]> {
+  const db = getDb();
+  const pattern = `%${query}%`;
+  return db
+    .select()
+    .from(articles)
+    .where(
+      or(
+        like(articles.title, pattern),
+        like(articles.author, pattern),
+        like(articles.publication, pattern),
+      ),
+    )
+    .orderBy(desc(articles.createdAt));
 }
 
-export function searchArticles(query: string): Article[] {
-  const q = query.toLowerCase();
-  return articles.filter(
-    (a) =>
-      a.title.toLowerCase().includes(q) ||
-      a.author.toLowerCase().includes(q) ||
-      a.excerpt.toLowerCase().includes(q)
-  );
+export async function addArticle(article: Omit<NewArticle, 'id' | 'createdAt'>): Promise<Article> {
+  const db = getDb();
+  await db.insert(articles).values(article);
+  const rows = await db
+    .select()
+    .from(articles)
+    .orderBy(desc(articles.createdAt))
+    .limit(1);
+  return rows[0];
 }
 
-export function addArticle(article: Omit<Article, 'id' | 'createdAt'>): Article {
-  const newArticle: Article = {
-    ...article,
-    id: Math.max(0, ...articles.map((a) => a.id)) + 1,
-    createdAt: new Date().toISOString(),
-  };
-  articles = [...articles, newArticle];
-  return newArticle;
+export async function deleteArticle(id: number): Promise<void> {
+  const db = getDb();
+  await db.delete(highlights).where(eq(highlights.articleId, id));
+  await db.delete(articles).where(eq(articles.id, id));
 }
 
-export function deleteArticle(id: number): void {
-  articles = articles.filter((a) => a.id !== id);
-  highlights = highlights.filter((h) => h.articleId !== id);
+// ─── Highlights ─────────────────────────────────────────────────────────────
+
+export async function getHighlightsByArticle(articleId: number): Promise<Highlight[]> {
+  const db = getDb();
+  return db.select().from(highlights).where(eq(highlights.articleId, articleId)).orderBy(highlights.positionStart);
 }
 
-// ─── Highlights ───────────────────────────────────────────────────────────
-
-export function getHighlightsByArticle(articleId: number): Highlight[] {
-  return highlights.filter((h) => h.articleId === articleId);
+export async function getAllHighlights(): Promise<Highlight[]> {
+  const db = getDb();
+  return db.select().from(highlights).orderBy(desc(highlights.createdAt));
 }
 
-export function getAllHighlights(): Highlight[] {
-  return highlights;
+export async function addHighlight(highlight: Omit<NewHighlight, 'id' | 'createdAt'>): Promise<Highlight> {
+  const db = getDb();
+  await db.insert(highlights).values(highlight);
+  const rows = await db
+    .select()
+    .from(highlights)
+    .where(eq(highlights.articleId, highlight.articleId))
+    .orderBy(desc(highlights.createdAt))
+    .limit(1);
+  return rows[0];
 }
 
-export function getHighlightsByColor(color: string): Highlight[] {
-  return highlights.filter((h) => h.color === color);
+export async function updateHighlightNote(id: number, note: string): Promise<void> {
+  const db = getDb();
+  await db.update(highlights).set({ note }).where(eq(highlights.id, id));
 }
 
-export function searchHighlights(query: string): Highlight[] {
-  const q = query.toLowerCase();
-  return highlights.filter(
-    (h) =>
-      h.textExact.toLowerCase().includes(q) ||
-      h.note.toLowerCase().includes(q)
-  );
+export async function deleteHighlight(id: number): Promise<void> {
+  const db = getDb();
+  await db.delete(highlights).where(eq(highlights.id, id));
 }
 
-export function addHighlight(highlight: Omit<Highlight, 'id' | 'createdAt'>): Highlight {
-  const newHighlight: Highlight = {
-    ...highlight,
-    id: Math.max(0, ...highlights.map((h) => h.id)) + 1,
-    createdAt: new Date().toISOString(),
-  };
-  highlights = [...highlights, newHighlight];
-  return newHighlight;
+// ─── Feeds ──────────────────────────────────────────────────────────────────
+
+export async function getAllFeeds(): Promise<Feed[]> {
+  const db = getDb();
+  return db.select().from(feeds).orderBy(desc(feeds.createdAt));
 }
 
-export function updateHighlightNote(id: number, note: string): void {
-  highlights = highlights.map((h) => (h.id === id ? { ...h, note } : h));
+export async function addFeed(feed: Omit<NewFeed, 'id' | 'createdAt'>): Promise<Feed> {
+  const db = getDb();
+  await db.insert(feeds).values(feed);
+  const rows = await db
+    .select()
+    .from(feeds)
+    .orderBy(desc(feeds.createdAt))
+    .limit(1);
+  return rows[0];
 }
 
-export function deleteHighlight(id: number): void {
-  highlights = highlights.filter((h) => h.id !== id);
+export async function deleteFeed(id: number): Promise<void> {
+  const db = getDb();
+  await db.delete(feeds).where(eq(feeds.id, id));
 }
 
-// ─── Feeds ────────────────────────────────────────────────────────────────
-
-export function getAllFeeds(): Feed[] {
-  return feeds;
+export async function updateFeedSyncTime(id: number): Promise<void> {
+  const db = getDb();
+  await db.update(feeds).set({ lastSyncedAt: new Date().toISOString() }).where(eq(feeds.id, id));
 }
 
-export function addFeed(feed: Omit<Feed, 'id' | 'createdAt' | 'lastSyncedAt'>): Feed {
-  const newFeed: Feed = {
-    ...feed,
-    id: Math.max(0, ...feeds.map((f) => f.id)) + 1,
-    lastSyncedAt: null,
-    createdAt: new Date().toISOString(),
-  };
-  feeds = [...feeds, newFeed];
-  return newFeed;
-}
+// ─── Helpers ────────────────────────────────────────────────────────────────
 
-export function deleteFeed(id: number): void {
-  feeds = feeds.filter((f) => f.id !== id);
-}
-
-export function updateFeedSyncTime(id: number): void {
-  feeds = feeds.map((f) =>
-    f.id === id ? { ...f, lastSyncedAt: new Date().toISOString() } : f
-  );
+export async function getAllArticleUrls(): Promise<Set<string>> {
+  const db = getDb();
+  const rows = await db.select({ sourceUrl: articles.sourceUrl }).from(articles);
+  return new Set(rows.map((r) => r.sourceUrl).filter((u): u is string => !!u));
 }

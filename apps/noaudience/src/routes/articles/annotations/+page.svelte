@@ -1,42 +1,79 @@
 <script lang="ts">
+  import { onMount } from 'svelte';
   import SearchBar from '@noaudience/core/components/SearchBar.svelte';
-  import { getAllHighlights, getArticleById, searchHighlights, getHighlightsByColor } from '$lib/articles/db';
+  import { getAllHighlights, getArticleById } from '$lib/articles/db';
   import { HIGHLIGHT_COLORS } from '$lib/articles/mock';
-  import type { Highlight } from '$lib/articles/mock';
+  import type { Article, Highlight } from '$lib/articles/db';
 
   let searchQuery = $state('');
   let activeColorFilter = $state('');
+  let allHighlights = $state<Highlight[]>([]);
+  let loading = $state(true);
 
-  let allHighlights = $derived(getAllHighlights());
+  interface HighlightGroup {
+    article: Article;
+    highlights: Highlight[];
+  }
 
-  let filteredHighlights = $derived.by(() => {
-    let result: Highlight[];
+  let groupedHighlights = $state<HighlightGroup[]>([]);
+
+  async function loadHighlights() {
+    try {
+      allHighlights = await getAllHighlights();
+      await buildGroups();
+    } catch (e) {
+      console.error('Failed to load highlights:', e);
+    } finally {
+      loading = false;
+    }
+  }
+
+  async function buildGroups() {
+    let filtered = allHighlights;
+
     if (searchQuery) {
-      result = searchHighlights(searchQuery);
+      const q = searchQuery.toLowerCase();
+      filtered = filtered.filter(
+        (h) =>
+          (h.textExact ?? '').toLowerCase().includes(q) ||
+          (h.note ?? '').toLowerCase().includes(q)
+      );
     } else if (activeColorFilter) {
-      result = getHighlightsByColor(activeColorFilter);
-    } else {
-      result = allHighlights;
+      filtered = filtered.filter((h) => h.color === activeColorFilter);
     }
-    return result.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
-  });
 
-  // Group highlights by article
-  let groupedHighlights = $derived.by(() => {
-    const groups: Map<number, { article: ReturnType<typeof getArticleById>; highlights: typeof filteredHighlights }> = new Map();
-    for (const h of filteredHighlights) {
-      if (!groups.has(h.articleId)) {
-        groups.set(h.articleId, {
-          article: getArticleById(h.articleId),
-          highlights: [],
-        });
+    filtered = [...filtered].sort((a, b) => (b.createdAt ?? '').localeCompare(a.createdAt ?? ''));
+
+    // Group by article
+    const groupMap = new Map<number, { article: Article | undefined; highlights: Highlight[] }>();
+    for (const h of filtered) {
+      if (h.articleId == null) continue;
+      if (!groupMap.has(h.articleId)) {
+        const article = await getArticleById(h.articleId);
+        groupMap.set(h.articleId, { article, highlights: [] });
       }
-      groups.get(h.articleId)!.highlights.push(h);
+      groupMap.get(h.articleId)!.highlights.push(h);
     }
-    return Array.from(groups.values()).filter((g) => g.article);
+
+    groupedHighlights = Array.from(groupMap.values()).filter(
+      (g): g is HighlightGroup => g.article != null
+    );
+  }
+
+  $effect(() => {
+    const _q = searchQuery;
+    const _c = activeColorFilter;
+    if (!loading) {
+      buildGroups();
+    }
   });
 
-  function formatDate(dateStr: string): string {
+  onMount(() => {
+    loadHighlights();
+  });
+
+  function formatDate(dateStr: string | null): string {
+    if (!dateStr) return '';
     return new Date(dateStr).toLocaleDateString('en-US', {
       month: 'short',
       day: 'numeric',
@@ -51,23 +88,23 @@
 </script>
 
 <!-- Header -->
-<div style="display: flex; align-items: center; gap: 12px; margin-bottom: 24px;">
-  <a href="/articles" class="back-link" style="font-size: 11px; color: var(--text-tertiary); text-decoration: none;">
-    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle;">
+<div style="display: flex; align-items: center; gap: 16px; margin-bottom: 36px;">
+  <a href="/articles" class="back-link" style="font-size: 13px; color: var(--text-tertiary); text-decoration: none;">
+    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle;">
       <polyline points="15 18 9 12 15 6" />
     </svg>
   </a>
-  <h1 style="font-size: 15px; font-weight: 600; color: var(--text-primary); margin: 0;">Annotations</h1>
-  <div style="width: 200px;">
+  <h1 style="font-size: 28px; font-weight: 700; color: var(--text-primary); margin: 0;">Annotations</h1>
+  <div style="width: 260px;">
     <SearchBar bind:value={searchQuery} placeholder="Search highlights..." />
   </div>
   <div style="flex: 1;"></div>
-  <span style="font-size: 11px; color: var(--text-tertiary);">{allHighlights.length} highlights</span>
+  <span style="font-size: 13px; color: var(--text-tertiary);">{allHighlights.length} highlights</span>
 </div>
 
 <!-- Color filter -->
-<div style="display: flex; align-items: center; gap: 8px; margin-bottom: 20px;">
-  <span style="font-size: 11px; color: var(--text-tertiary);">Filter:</span>
+<div style="display: flex; align-items: center; gap: 10px; margin-bottom: 28px;">
+  <span style="font-size: 13px; color: var(--text-tertiary);">Filter:</span>
   {#each colorNames as color}
     <button
       class="color-dot"
@@ -85,34 +122,36 @@
   {/if}
 </div>
 
-{#if groupedHighlights.length === 0}
+{#if loading}
   <div style="padding: 48px 0; text-align: center;">
-    <p style="font-size: 12px; color: var(--text-tertiary);">{searchQuery || activeColorFilter ? 'No matching highlights' : 'No highlights yet'}</p>
+    <p style="font-size: 15px; color: var(--text-tertiary);">Loading...</p>
+  </div>
+{:else if groupedHighlights.length === 0}
+  <div style="padding: 48px 0; text-align: center;">
+    <p style="font-size: 15px; color: var(--text-tertiary);">{searchQuery || activeColorFilter ? 'No matching highlights' : 'No highlights yet'}</p>
   </div>
 {:else}
-  <div style="display: flex; flex-direction: column; gap: 28px;">
+  <div style="display: flex; flex-direction: column; gap: 40px;">
     {#each groupedHighlights as group}
-      {#if group.article}
-        <div>
-          <!-- Article header -->
-          <a href="/articles/{group.article.id}" class="article-link" style="display: block; font-size: 13px; font-weight: 600; color: var(--text-primary); text-decoration: none; margin-bottom: 12px;">
-            {group.article.title}
-            <span style="font-size: 11px; font-weight: 400; color: var(--text-tertiary); margin-left: 8px;">{group.article.author} · {formatDate(group.article.datePublished)}</span>
-          </a>
+      <div>
+        <!-- Article header -->
+        <a href="/articles/{group.article.id}" class="article-link" style="display: block; font-size: 17px; font-weight: 600; color: var(--text-primary); text-decoration: none; margin-bottom: 16px;">
+          {group.article.title}
+          <span style="font-size: 13px; font-weight: 400; color: var(--text-tertiary); margin-left: 10px;">{group.article.author} · {formatDate(group.article.datePublished)}</span>
+        </a>
 
-          <!-- Highlights -->
-          <div style="display: flex; flex-direction: column; gap: 10px;">
-            {#each group.highlights as highlight}
-              <div style="padding-left: 16px; border-left: 2px solid {HIGHLIGHT_COLORS[highlight.color]};">
-                <p style="font-size: 13px; color: var(--text-secondary); line-height: 1.6; margin: 0; font-style: italic;">"{highlight.textExact}"</p>
-                {#if highlight.note}
-                  <p style="font-size: 12px; color: var(--text-tertiary); margin: 4px 0 0 0;">{highlight.note}</p>
-                {/if}
-              </div>
-            {/each}
-          </div>
+        <!-- Highlights -->
+        <div style="display: flex; flex-direction: column; gap: 16px;">
+          {#each group.highlights as highlight}
+            <div style="padding-left: 20px; border-left: 2px solid {HIGHLIGHT_COLORS[highlight.color ?? 'yellow']};">
+              <p style="font-size: 15px; color: var(--text-secondary); line-height: 1.6; margin: 0; font-style: italic;">"{highlight.textExact}"</p>
+              {#if highlight.note}
+                <p style="font-size: 14px; color: var(--text-tertiary); margin: 6px 0 0 0;">{highlight.note}</p>
+              {/if}
+            </div>
+          {/each}
         </div>
-      {/if}
+      </div>
     {/each}
   </div>
 {/if}
@@ -127,8 +166,8 @@
   }
 
   .color-dot {
-    width: 16px;
-    height: 16px;
+    width: 20px;
+    height: 20px;
     border-radius: 50%;
     border: 2px solid transparent;
     cursor: pointer;
@@ -145,7 +184,7 @@
   }
 
   .clear-btn {
-    font-size: 11px;
+    font-size: 13px;
     color: var(--text-tertiary);
     background: transparent;
     border: none;

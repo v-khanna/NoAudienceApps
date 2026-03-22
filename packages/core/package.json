@@ -8,7 +8,8 @@
     "./db": "./src/db/client.ts",
     "./db/schema": "./src/db/schema.ts",
     "./components/*": "./src/components/*",
-    "./stores/*": "./src/stores/*"
+    "./stores/*": "./src/stores/*",
+    "./stores/modules": "./src/stores/modules.ts"
   },
   "dependencies": {
     "drizzle-orm": "^0.45.1"

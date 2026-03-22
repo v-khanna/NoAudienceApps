@@ -28,14 +28,14 @@
 <nav style="
   display: flex;
   flex-direction: column;
-  width: 200px;
+  width: 240px;
   height: 100%;
   background: var(--bg-base);
   border-right: 1px solid var(--border);
   user-select: none;
 ">
   <!-- Brand -->
-  <div style="padding: 16px 12px 12px; font-size: 13px; font-weight: 600; color: var(--text-secondary);">
+  <div style="padding: 20px 16px 16px; font-size: 16px; font-weight: 700; color: var(--text-primary); letter-spacing: -0.01em;">
     NoAudience
   </div>
 
@@ -52,9 +52,9 @@
           align-items: center;
           justify-content: space-between;
           width: 100%;
-          height: 28px;
-          padding: 0 12px;
-          font-size: 12px;
+          height: 36px;
+          padding: 0 16px;
+          font-size: 14px;
           font-weight: 500;
           color: var(--text-secondary);
           background: transparent;

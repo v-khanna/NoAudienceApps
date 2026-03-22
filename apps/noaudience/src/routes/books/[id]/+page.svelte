@@ -12,21 +12,20 @@
   } from '$lib/books/db';
   import type { Book, BookShelf, BookReview, BookProgressEntry } from '$lib/books/mock';
 
-  let bookId = $derived(Number($page.params.id));
-  let book = $derived(getBookById(bookId));
-  let exclusiveShelf = $derived(book ? getExclusiveShelfForBook(book.id) : undefined);
-  let bookShelves = $derived(book ? getAllShelvesForBook(book.id) : []);
-  let review = $derived(book ? getReviewForBook(book.id) : undefined);
-  let progressEntries = $derived(book ? getProgressForBook(book.id) : []);
-  let latestProgress = $derived(book ? getLatestProgress(book.id) : undefined);
-  let allShelves = $derived(getAllShelves());
-
+  let book = $state<Book | undefined>(undefined);
+  let exclusiveShelf = $state<BookShelf | undefined>(undefined);
+  let bookShelvesData = $state<BookShelf[]>([]);
+  let review = $state<BookReview | undefined>(undefined);
+  let progressEntries = $state<BookProgressEntry[]>([]);
+  let latestProgressEntry = $state<BookProgressEntry | undefined>(undefined);
+  let allShelvesData = $state<BookShelf[]>([]);
+  let loaded = $state(false);
   let showFullDescription = $state(false);
 
   let rating = $derived(review?.rating ?? 0);
   let progressPercent = $derived(
-    latestProgress && book?.pageCount
-      ? Math.round((latestProgress.progressValue / book.pageCount) * 100)
+    latestProgressEntry && book?.pageCount
+      ? Math.round((latestProgressEntry.progressValue / book.pageCount) * 100)
       : 0
   );
 
@@ -36,15 +35,52 @@
       : book?.description ?? ''
   );
 
+  async function loadBook(id: number) {
+    loaded = false;
+    try {
+      const b = await getBookById(id);
+      book = b;
+      if (b) {
+        const [es, bs, rv, pe, lp, as_] = await Promise.all([
+          getExclusiveShelfForBook(b.id),
+          getAllShelvesForBook(b.id),
+          getReviewForBook(b.id),
+          getProgressForBook(b.id),
+          getLatestProgress(b.id),
+          getAllShelves(),
+        ]);
+        exclusiveShelf = es;
+        bookShelvesData = bs;
+        review = rv;
+        progressEntries = pe;
+        latestProgressEntry = lp;
+        allShelvesData = as_;
+      }
+    } catch (e: any) {
+      console.error('Failed to load book:', e);
+    } finally {
+      loaded = true;
+    }
+  }
+
+  // Load on mount and reload when route param changes
+  $effect(() => {
+    const bookId = Number($page.params.id);
+    if (bookId) {
+      loadBook(bookId);
+    }
+  });
+
   function handleRatingChange(newValue: number) {
     // In a real app, this would persist the rating
   }
 </script>
 
+{#if loaded}
 {#if book}
-  <div style="display: flex; gap: 24px;">
+  <div style="display: flex; gap: 32px;">
     <!-- Left: cover -->
-    <div style="flex-shrink: 0; width: 160px;">
+    <div style="flex-shrink: 0; width: 200px;">
       <img
         src={book.coverPath}
         alt={book.title}
@@ -55,43 +91,43 @@
 
     <!-- Right: info -->
     <div style="flex: 1; min-width: 0;">
-      <h1 style="font-size: 15px; font-weight: 600; color: var(--text-primary); margin: 0;">{book.title}</h1>
-      <p style="font-size: 13px; color: var(--text-secondary); margin: 4px 0 0 0;">{book.author}</p>
+      <h1 style="font-size: 28px; font-weight: 700; color: var(--text-primary); margin: 0;">{book.title}</h1>
+      <p style="font-size: 15px; color: var(--text-secondary); margin: 6px 0 0 0;">{book.author}</p>
 
       <!-- Shelf indicator -->
       {#if exclusiveShelf}
-        <div style="display: flex; align-items: center; gap: 6px; margin-top: 12px;">
-          <span style="width: 6px; height: 6px; border-radius: 50%; background: var(--accent); flex-shrink: 0;"></span>
-          <span style="font-size: 12px; color: var(--text-secondary);">{exclusiveShelf.name}</span>
+        <div style="display: flex; align-items: center; gap: 8px; margin-top: 16px;">
+          <span style="width: 8px; height: 8px; border-radius: 50%; background: var(--accent); flex-shrink: 0;"></span>
+          <span style="font-size: 15px; color: var(--text-secondary);">{exclusiveShelf.name}</span>
         </div>
       {/if}
 
       <!-- Rating -->
-      <div style="margin-top: 12px;">
+      <div style="margin-top: 16px;">
         <StarRating value={rating} halfStars={false} onchange={handleRatingChange} size="sm" />
       </div>
 
       <!-- Progress bar if currently reading -->
-      {#if exclusiveShelf?.name === 'Currently Reading' && latestProgress}
-        <div style="margin-top: 12px;">
+      {#if exclusiveShelf?.name === 'Currently Reading' && latestProgressEntry}
+        <div style="margin-top: 16px;">
           <div style="display: flex; align-items: center; gap: 8px;">
-            <div style="flex: 1; height: 4px; background: var(--border); border-radius: 2px; overflow: hidden;">
-              <div style="height: 100%; width: {progressPercent}%; background: var(--accent); border-radius: 2px;"></div>
+            <div style="flex: 1; height: 8px; background: var(--border); border-radius: 4px; overflow: hidden;">
+              <div style="height: 100%; width: {progressPercent}%; background: var(--accent); border-radius: 4px;"></div>
             </div>
-            <span style="font-size: 11px; color: var(--text-secondary);">p.{latestProgress.progressValue}/{book.pageCount}</span>
+            <span style="font-size: 13px; color: var(--text-secondary);">p.{latestProgressEntry.progressValue}/{book.pageCount}</span>
           </div>
         </div>
       {/if}
 
       <!-- Description -->
       {#if book.description}
-        <div style="margin-top: 16px;">
-          <p style="font-size: 13px; color: var(--text-secondary); line-height: 1.6; margin: 0;">{descriptionTruncated}</p>
+        <div style="margin-top: 20px;">
+          <p style="font-size: 15px; color: var(--text-secondary); line-height: 1.6; margin: 0;">{descriptionTruncated}</p>
           {#if book.description.length > 300}
             <button
               onclick={() => (showFullDescription = !showFullDescription)}
               class="text-btn"
-              style="font-size: 12px; color: var(--accent); background: none; border: none; padding: 0; margin-top: 4px; cursor: pointer;"
+              style="font-size: 15px; color: var(--accent); background: none; border: none; padding: 0; margin-top: 4px; cursor: pointer;"
             >
               {showFullDescription ? 'Show less' : 'Show more'}
             </button>
@@ -100,36 +136,36 @@
       {/if}
 
       <!-- Metadata inline -->
-      <p style="font-size: 12px; color: var(--text-tertiary); margin: 16px 0 0 0;">
+      <p style="font-size: 13px; color: var(--text-tertiary); margin: 20px 0 0 0;">
         {book.pageCount} pages{#if book.publisher} &middot; {book.publisher}{/if}{#if book.publishDate} &middot; {book.publishDate}{/if}{#if book.isbn} &middot; {book.isbn}{/if}
       </p>
 
       <!-- Genres -->
       {#if book.genres && book.genres.length > 0}
-        <div style="display: flex; flex-wrap: wrap; gap: 4px; margin-top: 12px;">
+        <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-top: 16px;">
           {#each book.genres as genre}
-            <span style="font-size: 11px; color: var(--text-secondary); padding: 2px 8px; border: 1px solid var(--border); border-radius: 4px;">{genre}</span>
+            <span style="font-size: 13px; color: var(--text-secondary); padding: 4px 10px; border: 1px solid var(--border); border-radius: 4px;">{genre}</span>
           {/each}
         </div>
       {/if}
 
       <!-- Review -->
       {#if review}
-        <div style="margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border);">
-          <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+        <div style="margin-top: 28px; padding-top: 20px; border-top: 1px solid var(--border);">
+          <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
             <StarRating value={review.rating} halfStars={false} readonly size="sm" />
-            <span style="font-size: 11px; color: var(--text-tertiary);">{review.dateRead}</span>
+            <span style="font-size: 13px; color: var(--text-tertiary);">{review.dateRead}</span>
           </div>
           {#if review.review}
-            <p style="font-size: 13px; color: var(--text-secondary); line-height: 1.6; margin: 0;">"{review.review}"</p>
+            <p style="font-size: 15px; color: var(--text-secondary); line-height: 1.6; margin: 0;">"{review.review}"</p>
           {/if}
         </div>
       {:else}
-        <div style="margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border);">
-          <p style="font-size: 12px; color: var(--text-tertiary); margin: 0;">No review yet.</p>
+        <div style="margin-top: 28px; padding-top: 20px; border-top: 1px solid var(--border);">
+          <p style="font-size: 15px; color: var(--text-tertiary); margin: 0;">No review yet.</p>
           <button
             class="text-btn"
-            style="font-size: 12px; color: var(--accent); background: none; border: none; padding: 0; margin-top: 4px; cursor: pointer;"
+            style="font-size: 15px; color: var(--accent); background: none; border: none; padding: 0; margin-top: 4px; cursor: pointer;"
           >
             Write a review
           </button>
@@ -138,12 +174,12 @@
 
       <!-- Progress notes -->
       {#if progressEntries.length > 0}
-        <div style="margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border);">
-          <h3 style="font-size: 11px; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.05em; margin: 0 0 8px 0;">Progress</h3>
+        <div style="margin-top: 28px; padding-top: 20px; border-top: 1px solid var(--border);">
+          <h3 style="font-size: 13px; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.05em; margin: 0 0 12px 0;">Progress</h3>
           {#each progressEntries as entry, i}
-            <div class="progress-row" style="display: flex; align-items: baseline; gap: 8px; padding: 4px 0; font-size: 12px; border-bottom: {i < progressEntries.length - 1 ? '1px solid var(--border)' : 'none'};">
+            <div class="progress-row" style="display: flex; align-items: baseline; gap: 8px; padding: 8px 0; font-size: 15px; border-bottom: {i < progressEntries.length - 1 ? '1px solid var(--border)' : 'none'};">
               <span style="color: var(--text-primary);">p.{entry.progressValue}</span>
-              <span style="color: var(--text-tertiary); font-size: 11px;">{new Date(entry.createdAt).toLocaleDateString()}</span>
+              <span style="color: var(--text-tertiary); font-size: 13px;">{new Date(entry.createdAt).toLocaleDateString()}</span>
               {#if entry.note}
                 <span style="color: var(--text-secondary); flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{entry.note}</span>
               {/if}
@@ -154,7 +190,8 @@
     </div>
   </div>
 {:else}
-  <p style="font-size: 12px; color: var(--text-tertiary);">Book not found.</p>
+  <p style="font-size: 15px; color: var(--text-tertiary);">Book not found.</p>
+{/if}
 {/if}
 
 <style>

@@ -3,10 +3,12 @@ import * as schema from './schema';
 
 let db: ReturnType<typeof createDb> | null = null;
 
-function createDb(execute: (sql: string, params: unknown[]) => Promise<unknown[]>) {
+type ExecuteFn = (sql: string, params: unknown[], method: string) => Promise<unknown[]>;
+
+function createDb(execute: ExecuteFn) {
   return drizzle(
     async (sql, params, method) => {
-      const result = await execute(sql, params as unknown[]);
+      const result = await execute(sql, params as unknown[], method);
       if (method === 'get') {
         return { rows: result.length ? [result[0]] : [] };
       }
@@ -16,7 +18,7 @@ function createDb(execute: (sql: string, params: unknown[]) => Promise<unknown[]
   );
 }
 
-export function initDb(execute: (sql: string, params: unknown[]) => Promise<unknown[]>) {
+export function initDb(execute: ExecuteFn) {
   db = createDb(execute);
   return db;
 }

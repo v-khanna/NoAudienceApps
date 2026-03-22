@@ -1,19 +1,45 @@
 <script lang="ts">
+  import { onMount } from 'svelte';
   import { page } from '$app/stores';
   import { getArticleById, getHighlightsByArticle, addHighlight } from '$lib/articles/db';
   import { HIGHLIGHT_COLORS } from '$lib/articles/mock';
   import HighlightToolbar from '$lib/articles/HighlightToolbar.svelte';
+  import type { Article, Highlight } from '$lib/articles/db';
 
   let articleId = $derived(Number($page.params.id));
-  let article = $derived(getArticleById(articleId));
-  let articleHighlights = $derived(getHighlightsByArticle(articleId));
+  let article = $state<Article | undefined>(undefined);
+  let articleHighlights = $state<Highlight[]>([]);
+  let loading = $state(true);
 
   let toolbarVisible = $state(false);
   let toolbarX = $state(0);
   let toolbarY = $state(0);
   let selectedText = $state('');
 
-  function formatDate(dateStr: string): string {
+  async function loadData() {
+    loading = true;
+    try {
+      const [a, h] = await Promise.all([
+        getArticleById(articleId),
+        getHighlightsByArticle(articleId),
+      ]);
+      article = a;
+      articleHighlights = h;
+    } catch (e) {
+      console.error('Failed to load article:', e);
+    } finally {
+      loading = false;
+    }
+  }
+
+  // Reload when articleId changes
+  $effect(() => {
+    const _id = articleId;
+    loadData();
+  });
+
+  function formatDate(dateStr: string | null): string {
+    if (!dateStr) return '';
     return new Date(dateStr).toLocaleDateString('en-US', {
       month: 'long',
       day: 'numeric',
@@ -35,9 +61,9 @@
     }
   }
 
-  function handleHighlightSelect(color: string) {
+  async function handleHighlightSelect(color: string) {
     if (selectedText) {
-      addHighlight({
+      const newHighlight = await addHighlight({
         articleId,
         color: color as 'yellow' | 'blue' | 'green' | 'pink',
         note: '',
@@ -47,16 +73,18 @@
         positionStart: 0,
         positionEnd: selectedText.length,
       });
+      articleHighlights = [...articleHighlights, newHighlight];
       toolbarVisible = false;
       window.getSelection()?.removeAllRanges();
     }
   }
 
-  function applyHighlights(html: string, highlights: typeof articleHighlights): string {
+  function applyHighlights(html: string, hls: Highlight[]): string {
     let result = html;
-    for (const h of highlights) {
-      const colorHex = HIGHLIGHT_COLORS[h.color] || HIGHLIGHT_COLORS.yellow;
-      const escapedText = h.textExact.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    for (const h of hls) {
+      const colorHex = HIGHLIGHT_COLORS[h.color ?? 'yellow'] || HIGHLIGHT_COLORS.yellow;
+      const escapedText = (h.textExact ?? '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      if (!escapedText) continue;
       const regex = new RegExp(`(${escapedText})`, 'g');
       result = result.replace(
         regex,
@@ -67,7 +95,7 @@
   }
 
   let processedHtml = $derived(
-    article ? applyHighlights(article.contentHtml, articleHighlights) : ''
+    article?.contentHtml ? applyHighlights(article.contentHtml, articleHighlights) : ''
   );
 </script>
 
@@ -75,25 +103,29 @@
 
 <HighlightToolbar x={toolbarX} y={toolbarY} visible={toolbarVisible} onselect={handleHighlightSelect} />
 
-{#if article}
-  <div style="max-width: 600px; margin: 0 auto; padding: 32px 16px;">
+{#if loading}
+  <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 200px;">
+    <p style="font-size: 15px; color: var(--text-tertiary);">Loading...</p>
+  </div>
+{:else if article}
+  <div style="max-width: 720px; margin: 0 auto; padding: 40px 24px;">
     <!-- Back link -->
-    <a href="/articles" class="back-link" style="display: inline-flex; align-items: center; gap: 6px; font-size: 11px; color: var(--text-tertiary); text-decoration: none; margin-bottom: 32px;">
-      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <a href="/articles" class="back-link" style="display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-tertiary); text-decoration: none; margin-bottom: 40px;">
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <polyline points="15 18 9 12 15 6" />
       </svg>
       Articles
     </a>
 
     <!-- Article Header -->
-    <header style="margin-bottom: 32px;">
-      <h1 style="font-size: 18px; font-weight: 600; color: var(--text-primary); margin: 0 0 12px 0; line-height: 1.4; font-family: Georgia, Charter, 'Times New Roman', serif;">
+    <header style="margin-bottom: 40px;">
+      <h1 style="font-size: 28px; font-weight: 700; color: var(--text-primary); margin: 0 0 16px 0; line-height: 1.4; font-family: Georgia, Charter, 'Times New Roman', serif;">
         {article.title}
       </h1>
-      <div style="font-size: 11px; color: var(--text-tertiary);">
+      <div style="font-size: 14px; color: var(--text-tertiary);">
         {article.author} · {formatDate(article.datePublished)} · {article.readingTimeMinutes} min
       </div>
-      <div style="margin-top: 16px; border-top: 1px solid var(--border);"></div>
+      <div style="margin-top: 20px; border-top: 1px solid var(--border);"></div>
     </header>
 
     <!-- Article Content -->
@@ -103,14 +135,14 @@
 
     <!-- Highlights section -->
     {#if articleHighlights.length > 0}
-      <div style="margin-top: 48px; padding-top: 24px; border-top: 1px solid var(--border);">
-        <h3 style="font-size: 13px; font-weight: 600; color: var(--text-primary); margin: 0 0 16px 0;">Highlights ({articleHighlights.length})</h3>
-        <div style="display: flex; flex-direction: column; gap: 12px;">
+      <div style="margin-top: 56px; padding-top: 32px; border-top: 1px solid var(--border);">
+        <h3 style="font-size: 20px; font-weight: 600; color: var(--text-primary); margin: 0 0 20px 0;">Highlights ({articleHighlights.length})</h3>
+        <div style="display: flex; flex-direction: column; gap: 18px;">
           {#each articleHighlights as highlight}
-            <div style="padding-left: 16px; border-left: 2px solid {HIGHLIGHT_COLORS[highlight.color]};">
-              <p style="font-size: 14px; color: var(--text-secondary); line-height: 1.6; margin: 0; font-family: Georgia, Charter, 'Times New Roman', serif; font-style: italic;">"{highlight.textExact}"</p>
+            <div style="padding-left: 20px; border-left: 2px solid {HIGHLIGHT_COLORS[highlight.color ?? 'yellow']};">
+              <p style="font-size: 16px; color: var(--text-secondary); line-height: 1.6; margin: 0; font-family: Georgia, Charter, 'Times New Roman', serif; font-style: italic;">"{highlight.textExact}"</p>
               {#if highlight.note}
-                <p style="font-size: 12px; color: var(--text-tertiary); margin: 6px 0 0 0;">{highlight.note}</p>
+                <p style="font-size: 14px; color: var(--text-tertiary); margin: 8px 0 0 0;">{highlight.note}</p>
               {/if}
             </div>
           {/each}
@@ -120,8 +152,8 @@
   </div>
 {:else}
   <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 200px;">
-    <p style="font-size: 12px; color: var(--text-tertiary);">Article not found</p>
-    <a href="/articles" style="font-size: 11px; color: var(--accent); text-decoration: none; margin-top: 8px;">Back to Articles</a>
+    <p style="font-size: 15px; color: var(--text-tertiary);">Article not found</p>
+    <a href="/articles" style="font-size: 13px; color: var(--accent); text-decoration: none; margin-top: 12px;">Back to Articles</a>
   </div>
 {/if}
 
@@ -131,14 +163,24 @@
   }
 
   :global(.article-content) {
-    font-size: 16px;
+    font-size: 18px;
     line-height: 1.7;
     color: var(--text-primary);
     font-family: Georgia, Charter, 'Times New Roman', serif;
   }
 
   :global(.article-content h2) {
-    font-size: 15px;
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-top: 40px;
+    margin-bottom: 16px;
+    line-height: 1.3;
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+
+  :global(.article-content h3) {
+    font-size: 17px;
     font-weight: 600;
     color: var(--text-primary);
     margin-top: 32px;
@@ -147,30 +189,20 @@
     font-family: 'Inter', system-ui, sans-serif;
   }
 
-  :global(.article-content h3) {
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--text-primary);
-    margin-top: 24px;
-    margin-bottom: 8px;
-    line-height: 1.3;
-    font-family: 'Inter', system-ui, sans-serif;
-  }
-
   :global(.article-content p) {
-    margin-bottom: 20px;
+    margin-bottom: 24px;
   }
 
   :global(.article-content blockquote) {
     border-left: 2px solid var(--accent);
-    padding-left: 16px;
-    margin: 24px 0;
+    padding-left: 20px;
+    margin: 28px 0;
     font-style: italic;
     color: var(--text-secondary);
   }
 
   :global(.article-content blockquote p) {
-    margin-bottom: 8px;
+    margin-bottom: 10px;
   }
 
   :global(.article-content a) {
@@ -187,17 +219,17 @@
   :global(.article-content img) {
     max-width: 100%;
     border-radius: 4px;
-    margin: 20px 0;
+    margin: 24px 0;
   }
 
   :global(.article-content ul),
   :global(.article-content ol) {
-    padding-left: 20px;
-    margin-bottom: 20px;
+    padding-left: 24px;
+    margin-bottom: 24px;
   }
 
   :global(.article-content li) {
-    margin-bottom: 8px;
+    margin-bottom: 10px;
   }
 
   :global(.article-content code) {
@@ -210,10 +242,10 @@
 
   :global(.article-content pre) {
     background: var(--bg-inset);
-    padding: 16px;
+    padding: 20px;
     border-radius: 4px;
     overflow-x: auto;
-    margin-bottom: 20px;
+    margin-bottom: 24px;
     border: 1px solid var(--border);
   }
 
@@ -225,7 +257,7 @@
   :global(.article-content hr) {
     border: none;
     border-top: 1px solid var(--border);
-    margin: 32px 0;
+    margin: 40px 0;
   }
 
   :global(.article-content strong) {
