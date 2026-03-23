@@ -1,8 +1,10 @@
 <script lang="ts">
   import { getWatchlist, type WatchlistEntryWithFilm } from '$lib/films/db';
+  import AddToWatchlistModal from '$lib/films/AddToWatchlistModal.svelte';
 
   let sortBy = $state<'added' | 'title' | 'year'>('added');
   let watchlist = $state<WatchlistEntryWithFilm[]>([]);
+  let addModalOpen = $state(false);
 
   async function loadWatchlist() {
     try {
@@ -26,6 +28,12 @@
   <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 32px;">
     <h1 style="font-family: 'Newsreader', Georgia, serif; font-size: 1.75rem; font-weight: 500; color: var(--text-primary); margin: 0;">Watchlist</h1>
     <span style="font-size: 0.6875rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-muted);">{watchlist.length} Films</span>
+    <button
+      onclick={() => addModalOpen = true}
+      style="padding: 6px 16px; border-radius: 999px; background: var(--accent); color: #00390F; border: none; font-size: 13px; font-weight: 600; cursor: pointer; transition: opacity 150ms;"
+      onmouseenter={(e) => e.currentTarget.style.opacity = '0.85'}
+      onmouseleave={(e) => e.currentTarget.style.opacity = '1'}
+    >+ Add Film</button>
     <div style="flex: 1;"></div>
     <!-- Sort -->
     <div style="display: flex; align-items: center; gap: 8px; background: var(--surface-container-low); padding: 6px 14px; border-radius: 8px; cursor: pointer;">
@@ -72,7 +80,8 @@
       {/each}
 
       <!-- Add Movie card -->
-      <a href="/films" class="add-card" style="text-decoration: none; cursor: pointer; display: flex; align-items: center; justify-content: center; aspect-ratio: 2/3; border-radius: 6px; border: 1px dashed var(--ghost-border); background: transparent; transition: background 200ms, border-color 200ms;"
+      <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
+      <div onclick={() => addModalOpen = true} style="cursor: pointer; display: flex; align-items: center; justify-content: center; aspect-ratio: 2/3; border-radius: 6px; border: 1px dashed var(--ghost-border); background: transparent; transition: background 200ms, border-color 200ms;"
         onmouseenter={(e) => { e.currentTarget.style.background = 'var(--surface-container-low)'; e.currentTarget.style.borderColor = 'var(--accent)'; }}
         onmouseleave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.borderColor = 'var(--ghost-border)'; }}
       >
@@ -80,7 +89,7 @@
           <div style="font-size: 32px; color: var(--text-muted); margin-bottom: 8px;">+</div>
           <span style="font-size: 0.6875rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-muted);">Add Movie</span>
         </div>
-      </a>
+      </div>
     </div>
   {:else}
     <div style="padding: 80px 0; text-align: center;">
@@ -90,6 +99,12 @@
     </div>
   {/if}
 </main>
+
+<AddToWatchlistModal
+  open={addModalOpen}
+  onclose={() => addModalOpen = false}
+  onsave={loadWatchlist}
+/>
 
 <style>
   .sort-select {
