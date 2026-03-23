@@ -209,39 +209,48 @@
 <style>
   .field-label {
     display: block;
-    font-size: 13px;
+    font-size: 0.6875rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
     color: var(--text-secondary);
-    margin-bottom: 4px;
+    margin-bottom: 6px;
   }
 
   .field-input {
     width: 100%;
-    height: 40px;
-    padding: 0 8px;
-    background: var(--bg-inset);
-    border: 1px solid var(--border);
-    border-radius: 4px;
+    height: 44px;
+    padding: 0 14px;
+    background: var(--surface-container-low);
+    border: none;
+    border-bottom: 2px solid transparent;
+    border-radius: 6px;
     color: var(--text-primary);
     font-size: 15px;
     outline: none;
+    transition: border-color 150ms;
   }
   .field-input:focus {
-    border-color: var(--accent);
+    border-bottom-color: var(--accent);
   }
 
   .field-textarea {
     width: 100%;
-    padding: 8px;
-    background: var(--bg-inset);
-    border: 1px solid var(--border);
-    border-radius: 4px;
+    padding: 12px 14px;
+    background: var(--surface-container-low);
+    border: none;
+    border-bottom: 2px solid transparent;
+    border-radius: 6px;
     color: var(--text-primary);
+    font-family: 'Newsreader', Georgia, serif;
     font-size: 15px;
+    font-style: italic;
     outline: none;
     resize: none;
+    transition: border-color 150ms;
   }
   .field-textarea:focus {
-    border-color: var(--accent);
+    border-bottom-color: var(--accent);
   }
 
   .search-container {
@@ -253,11 +262,12 @@
     z-index: 10;
     width: 100%;
     margin-top: 4px;
-    background: var(--bg-elevated);
-    border: 1px solid var(--border);
-    border-radius: 4px;
-    max-height: 300px;
+    background: var(--surface-container-highest, #31353A);
+    border: 1px solid var(--ghost-border);
+    border-radius: 8px;
+    max-height: 240px;
     overflow-y: auto;
+    box-shadow: 0 16px 32px rgba(0, 0, 0, 0.4);
   }
 
   .search-result {
@@ -265,53 +275,46 @@
     text-align: left;
     display: flex;
     align-items: center;
-    gap: 10px;
-    padding: 8px 10px;
-    font-size: 15px;
+    gap: 12px;
+    padding: 8px 12px;
+    font-size: 14px;
     background: none;
     border: none;
-    border-bottom: 1px solid var(--border-subtle);
     cursor: pointer;
-    transition: background-color 150ms ease-out;
-  }
-  .search-result:last-child {
-    border-bottom: none;
+    transition: background 150ms;
   }
   .search-result:hover {
-    background-color: rgba(255, 255, 255, 0.03);
+    background: var(--surface-container-low);
   }
 
   .result-poster {
-    width: 28px;
-    height: 42px;
+    width: 32px;
+    height: 48px;
     object-fit: cover;
-    border-radius: 2px;
-    border: 1px solid var(--border);
+    border-radius: 3px;
     flex-shrink: 0;
   }
 
   .result-poster-placeholder {
-    width: 28px;
-    height: 42px;
-    background: var(--bg-inset);
-    border-radius: 2px;
-    border: 1px solid var(--border);
+    width: 32px;
+    height: 48px;
+    background: var(--surface-container-high);
+    border-radius: 3px;
     display: flex;
     align-items: center;
     justify-content: center;
     color: var(--text-muted);
-    font-size: 15px;
+    font-size: 14px;
     flex-shrink: 0;
   }
 
   .selected-preview {
     display: flex;
-    gap: 10px;
+    gap: 14px;
     align-items: center;
-    padding: 10px;
-    background: var(--bg-surface);
-    border: 1px solid var(--border);
-    border-radius: 4px;
+    padding: 14px;
+    background: var(--surface-container-low);
+    border-radius: 8px;
   }
 
   .toggle-btn {
@@ -319,28 +322,31 @@
     border: none;
     color: var(--text-secondary);
     cursor: pointer;
-    font-size: 15px;
-    padding: 4px 0;
-    transition: color 150ms ease-out;
+    font-size: 14px;
+    padding: 6px 12px;
+    border-radius: 999px;
+    transition: all 150ms;
   }
   .toggle-btn:hover {
+    background: var(--surface-container-low);
     color: var(--text-primary);
   }
   .toggle-btn.active {
+    background: rgba(0, 224, 84, 0.1);
     color: var(--accent);
   }
 
   .save-btn {
     background: var(--accent);
-    color: #000;
+    color: #00390F;
     border: none;
-    border-radius: 4px;
-    height: 40px;
-    padding: 0 16px;
-    font-size: 15px;
-    font-weight: 500;
+    border-radius: 6px;
+    height: 44px;
+    padding: 0 24px;
+    font-size: 14px;
+    font-weight: 600;
     cursor: pointer;
-    transition: opacity 150ms ease-out;
+    transition: opacity 150ms;
   }
   .save-btn:hover {
     opacity: 0.9;
