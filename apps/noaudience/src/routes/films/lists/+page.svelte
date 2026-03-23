@@ -38,12 +38,15 @@
   {#if lists.length > 0}
     <div class="lists-container">
       {#each lists as list, i}
-        <div class="list-row" class:border-bottom={i < lists.length - 1}>
+        <a href="/films/lists/{list.id}" class="list-row" class:border-bottom={i < lists.length - 1} style="text-decoration: none;">
           <div class="flex-1 min-w-0">
             <div class="flex items-center gap-8">
-              <span style="font-size: 15px; font-weight: 600; color: var(--text-primary);">{list.title}</span>
-              <span style="font-size: 13px; color: var(--text-tertiary);">{list.films.length} {list.films.length === 1 ? 'film' : 'films'}</span>
+              <span style="font-family: 'Newsreader', Georgia, serif; font-size: 1rem; font-weight: 500; color: var(--text-primary);">{list.title}</span>
+              <span style="font-size: 0.6875rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-muted);">{list.films.length} {list.films.length === 1 ? 'film' : 'films'}</span>
             </div>
+            {#if list.description}
+              <p style="font-size: 13px; color: var(--text-secondary); margin: 4px 0 0;">{list.description}</p>
+            {/if}
           </div>
           {#if list.films.length > 0}
             <div class="poster-preview">
@@ -56,7 +59,7 @@
               {/each}
             </div>
           {/if}
-        </div>
+        </a>
       {/each}
     </div>
   {:else}
