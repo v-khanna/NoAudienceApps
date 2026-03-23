@@ -1,7 +1,7 @@
 <script lang="ts">
   import { page } from '$app/stores';
   import { onMount } from 'svelte';
-  import { getLists, searchFilms, addToList, type FilmListWithFilms, type Film } from '$lib/films/db';
+  import { getLists, searchFilms, addToList, swapListPositions, type FilmListWithFilms, type Film } from '$lib/films/db';
 
   let list = $state<FilmListWithFilms | null>(null);
   let loading = $state(true);
@@ -50,6 +50,16 @@
 
   function isInList(filmId: number): boolean {
     return list?.films.some(f => f.id === filmId) ?? false;
+  }
+
+  async function moveFilm(index: number, direction: -1 | 1) {
+    if (!list) return;
+    const targetIndex = index + direction;
+    if (targetIndex < 0 || targetIndex >= list.films.length) return;
+    await swapListPositions(list.id, list.films[index].id, list.films[targetIndex].id);
+    // Reload
+    const allLists = await getLists();
+    list = allLists.find(l => l.id === list!.id) ?? null;
   }
 </script>
 
@@ -119,29 +129,50 @@
       {/if}
     </div>
 
-    <!-- Films Grid -->
+    <!-- Films List -->
     {#if list.films.length > 0}
-      <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 28px 20px;">
+      <div style="display: flex; flex-direction: column; gap: 2px; border-radius: 10px; overflow: hidden;">
         {#each list.films as film, i}
-          <a href="/films/{film.id}" style="text-decoration: none; cursor: pointer; display: block;">
-            <div style="aspect-ratio: 2/3; border-radius: 6px; overflow: hidden; background: var(--surface-container); margin-bottom: 10px; position: relative;">
-              {#if film.posterPath}
-                <img src={film.posterPath} alt={film.title} style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s;"
-                  onmouseenter={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
-                  onmouseleave={(e) => e.currentTarget.style.transform = 'scale(1)'}
-                />
-              {/if}
+          <div style="display: flex; align-items: center; gap: 14px; padding: 12px 16px; background: var(--surface-container-low); transition: background 150ms;"
+            onmouseenter={(e) => e.currentTarget.style.background = 'var(--surface-container)'}
+            onmouseleave={(e) => e.currentTarget.style.background = 'var(--surface-container-low)'}
+          >
+            <!-- Position / Arrows -->
+            <div style="display: flex; flex-direction: column; align-items: center; gap: 2px; width: 28px; flex-shrink: 0;">
+              <button
+                onclick={() => moveFilm(i, -1)}
+                disabled={i === 0}
+                style="background: none; border: none; cursor: {i === 0 ? 'default' : 'pointer'}; color: {i === 0 ? 'var(--surface-container-high)' : 'var(--text-secondary)'}; font-size: 14px; padding: 0; line-height: 1; transition: color 150ms;"
+                onmouseenter={(e) => { if (i > 0) e.currentTarget.style.color = 'var(--accent)'; }}
+                onmouseleave={(e) => { if (i > 0) e.currentTarget.style.color = 'var(--text-secondary)'; }}
+              >▲</button>
               {#if list.ranked}
-                <div style="position: absolute; top: 8px; left: 8px; width: 28px; height: 28px; border-radius: 50%; background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: var(--accent);">
-                  {i + 1}
-                </div>
+                <span style="font-size: 12px; font-weight: 700; color: var(--accent);">{i + 1}</span>
               {/if}
+              <button
+                onclick={() => moveFilm(i, 1)}
+                disabled={i === list.films.length - 1}
+                style="background: none; border: none; cursor: {i === list.films.length - 1 ? 'default' : 'pointer'}; color: {i === list.films.length - 1 ? 'var(--surface-container-high)' : 'var(--text-secondary)'}; font-size: 14px; padding: 0; line-height: 1; transition: color 150ms;"
+                onmouseenter={(e) => { if (i < list.films.length - 1) e.currentTarget.style.color = 'var(--accent)'; }}
+                onmouseleave={(e) => { if (i < list.films.length - 1) e.currentTarget.style.color = 'var(--text-secondary)'; }}
+              >▼</button>
             </div>
-            <h4 style="font-family: 'Newsreader', Georgia, serif; font-size: 0.9375rem; color: var(--text-primary); margin: 0 0 2px; line-height: 1.3;">{film.title}</h4>
-            <p style="font-size: 0.6875rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.08em; margin: 0;">
-              {film.year ?? ''}{#if film.director} · {film.director}{/if}
-            </p>
-          </a>
+
+            <!-- Poster -->
+            {#if film.posterPath}
+              <img src={film.posterPath} alt={film.title} style="width: 40px; height: 60px; object-fit: cover; border-radius: 4px; flex-shrink: 0;" />
+            {:else}
+              <div style="width: 40px; height: 60px; background: var(--surface-container-high); border-radius: 4px; flex-shrink: 0;"></div>
+            {/if}
+
+            <!-- Info -->
+            <a href="/films/{film.id}" style="flex: 1; min-width: 0; text-decoration: none;">
+              <h4 style="font-family: 'Newsreader', Georgia, serif; font-size: 1rem; color: var(--text-primary); margin: 0 0 2px;">{film.title}</h4>
+              <p style="font-size: 0.6875rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.08em; margin: 0;">
+                {film.year ?? ''}{#if film.director} · {film.director}{/if}
+              </p>
+            </a>
+          </div>
         {/each}
       </div>
     {:else}

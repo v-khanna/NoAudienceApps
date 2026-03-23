@@ -271,6 +271,24 @@ export async function addToList(listId: number, filmId: number): Promise<void> {
     .values({ listId, filmId, position: nextPos });
 }
 
+export async function swapListPositions(listId: number, filmIdA: number, filmIdB: number): Promise<void> {
+  const db = getDb();
+  const items = await db
+    .select()
+    .from(filmListItems)
+    .where(eq(filmListItems.listId, listId));
+
+  const itemA = items.find(i => i.filmId === filmIdA);
+  const itemB = items.find(i => i.filmId === filmIdB);
+  if (!itemA || !itemB) return;
+
+  const posA = itemA.position;
+  const posB = itemB.position;
+
+  await db.update(filmListItems).set({ position: posB }).where(eq(filmListItems.id, itemA.id));
+  await db.update(filmListItems).set({ position: posA }).where(eq(filmListItems.id, itemB.id));
+}
+
 export async function getLists(): Promise<FilmListWithFilms[]> {
   const db = getDb();
   const lists = await db
