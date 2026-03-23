@@ -8,7 +8,8 @@ A private, local-first desktop app for the kind of person who tracks movies in a
 
 Five modules for people who consume media like it's a full-time job:
 
-- **Films** — Log movies with ratings, reviews, tags. Diary view, watchlist, custom ranked lists with drag-to-reorder, stats dashboard. Posters and metadata from TMDB. Think Letterboxd, but it respects your privacy and doesn't make you feel bad about watching The Meg.
+- **Films** — Log movies with ratings, reviews, tags. Diary view, watchlist, custom ranked lists with drag-to-reorder, stats dashboard. Posters and metadata from TMDB.
+  - Think Letterboxd, but it respects your privacy and doesn't make you feel bad about watching The Meg.
 - **Books** — Shelves (want to read, reading, read — actually clickable and changeable, imagine that), progress tracking, reading challenges, analytics. Covers from Open Library. Goodreads without the influencers.
 - **Articles** — Sync your Substack via RSS. Save posts by URL. Highlight and annotate. For when you want to remember what you read instead of just sharing it.
 - **Writing** — Markdown editor with live preview. Write about what you consume, or write about nothing. Link entries to films, books, or articles in your library.
