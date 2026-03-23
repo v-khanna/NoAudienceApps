@@ -7,7 +7,14 @@
   }
 
   let { href, label, indent = false, currentPath = '' }: Props = $props();
-  let active = $derived(currentPath === href || (href !== '/' && currentPath.startsWith(href + '/')));
+  // Exact match for module roots (e.g. /films, /books) so "Overview" doesn't stay active on sub-pages
+  // Prefix match for sub-pages (e.g. /films/diary matches /films/diary/*)
+  let isModuleRoot = $derived(href !== '/' && !indent && ['films','books','articles','writing','chess'].some(m => href === '/' + m));
+  let active = $derived(
+    isModuleRoot
+      ? currentPath === href
+      : currentPath === href || (href !== '/' && currentPath.startsWith(href + '/'))
+  );
 </script>
 
 <a
