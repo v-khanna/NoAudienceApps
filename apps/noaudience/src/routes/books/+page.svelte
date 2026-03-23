@@ -49,80 +49,57 @@
 </script>
 
 {#if loaded}
-<div>
+<main style="padding-bottom: 64px;">
+
   <!-- Header -->
-  <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 32px;">
-    <h1 style="font-size: 28px; font-weight: 700; color: var(--text-primary); margin: 0;">Books</h1>
+  <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 40px;">
+    <h1 style="font-family: 'Newsreader', Georgia, serif; font-size: 1.75rem; font-weight: 500; color: var(--text-primary); margin: 0;">Your Library</h1>
     <button
       onclick={() => addModalOpen = true}
-      style="
-        height: 40px;
-        padding: 0 16px;
-        font-size: 15px;
-        font-weight: 500;
-        color: #000;
-        background: var(--accent);
-        border: none;
-        border-radius: 6px;
-        cursor: pointer;
-      "
-    >
-      + Add Book
-    </button>
-    <input
-      type="text"
-      bind:value={searchQuery}
-      placeholder="Search books..."
-      style="
-        height: 40px;
-        padding: 0 12px;
-        font-size: 15px;
-        background: var(--bg-inset);
-        border: 1px solid var(--border);
-        border-radius: 4px;
-        color: var(--text-primary);
-        outline: none;
-        width: 200px;
-      "
-    />
-    <div style="flex: 1;"></div>
-    {#if challenge}
-      <span style="font-size: 15px; color: var(--text-secondary); display: flex; align-items: center; gap: 8px;">
-        {booksReadThisYear.length} of {challenge.goal} books
-        <span style="display: inline-block; width: 60px; height: 8px; background: var(--border); border-radius: 4px; overflow: hidden;">
-          <span style="display: block; height: 100%; width: {Math.min(challengePct, 100)}%; background: var(--accent); border-radius: 4px;"></span>
-        </span>
-        <a href="/books/challenge" style="font-size: 13px; color: var(--text-tertiary); text-decoration: none;" class="section-link">Challenge</a>
-      </span>
-    {/if}
+      style="padding: 6px 16px; border-radius: 999px; background: var(--accent); color: #00390F; border: none; font-size: 13px; font-weight: 600; cursor: pointer;"
+    >+ Add Book</button>
+  </div>
+
+  <!-- Stats bar -->
+  <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 48px;">
+    <div style="background: var(--surface-container-low); border-radius: 10px; padding: 20px;">
+      <p style="font-size: 0.6875rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted); margin: 0 0 4px;">Total Books</p>
+      <span style="font-family: 'Newsreader', Georgia, serif; font-size: 2rem; color: var(--accent);">{currentlyReading.length + recentlyRead.length + wantToRead.length}</span>
+      <span style="font-size: 13px; color: var(--text-secondary); margin-left: 4px;">volumes</span>
+    </div>
+    <div style="background: var(--surface-container-low); border-radius: 10px; padding: 20px;">
+      <p style="font-size: 0.6875rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted); margin: 0 0 4px;">Currently Reading</p>
+      <span style="font-family: 'Newsreader', Georgia, serif; font-size: 2rem; color: var(--text-primary);">{currentlyReading.length}</span>
+      <span style="font-size: 13px; color: var(--text-secondary); margin-left: 4px;">active sessions</span>
+    </div>
+    <div style="background: var(--surface-container-low); border-radius: 10px; padding: 20px;">
+      <p style="font-size: 0.6875rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted); margin: 0 0 4px;">Finished {new Date().getFullYear()}</p>
+      <span style="font-family: 'Newsreader', Georgia, serif; font-size: 2rem; color: var(--accent);">{booksReadThisYear.length}</span>
+      <span style="font-size: 13px; color: var(--text-secondary); margin-left: 4px;">books read</span>
+    </div>
   </div>
 
   <!-- Currently Reading -->
   {#if currentlyReading.length > 0}
     <section style="margin-bottom: 48px;">
-      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
-        <h2 style="font-size: 20px; font-weight: 600; color: var(--text-primary); margin: 0;">Currently Reading</h2>
-      </div>
-      <div style="display: flex; flex-direction: column; gap: 12px;">
+      <h2 style="font-family: 'Newsreader', Georgia, serif; font-size: 1.25rem; font-weight: 500; color: var(--text-primary); margin: 0 0 20px;">Currently Reading</h2>
+      <div style="display: flex; flex-direction: column; gap: 2px; border-radius: 10px; overflow: hidden;">
         {#each currentlyReading as book}
           {@const progressPercent = book.latestProgress && book.pageCount
             ? Math.round((book.latestProgress.progressValue / book.pageCount) * 100)
             : 0}
-          <a href="/books/{book.id}" class="reading-row" style="display: flex; align-items: center; gap: 16px; text-decoration: none; padding: 12px; border: 1px solid var(--border); border-radius: 6px; transition: background 150ms ease-out;">
-            <img
-              src={book.coverPath}
-              alt={book.title}
-              style="width: 80px; height: auto; object-fit: cover; border-radius: 4px; flex-shrink: 0;"
-              loading="lazy"
-            />
+          <a href="/books/{book.id}" class="reading-row" style="display: flex; align-items: center; gap: 16px; text-decoration: none; padding: 14px 16px; background: var(--surface-container-low); transition: background 150ms;">
+            {#if book.coverPath}
+              <img src={book.coverPath} alt={book.title} style="width: 48px; height: 72px; object-fit: cover; border-radius: 4px; flex-shrink: 0;" loading="lazy" />
+            {/if}
             <div style="flex: 1; min-width: 0;">
-              <div style="font-size: 15px; font-weight: 600; color: var(--text-primary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{book.title}</div>
-              <div style="font-size: 15px; color: var(--text-secondary); margin-top: 4px;">{book.author}</div>
+              <div style="font-family: 'Newsreader', Georgia, serif; font-size: 1rem; color: var(--text-primary);">{book.title}</div>
+              <div style="font-size: 13px; color: var(--text-secondary); margin-top: 2px;">{book.author}</div>
               <div style="margin-top: 8px; display: flex; align-items: center; gap: 8px;">
-                <div style="flex: 1; height: 8px; background: var(--border); border-radius: 4px; overflow: hidden;">
-                  <div style="height: 100%; width: {progressPercent}%; background: var(--accent); border-radius: 4px;"></div>
+                <div style="flex: 1; height: 4px; background: var(--surface-container-high); border-radius: 999px; overflow: hidden;">
+                  <div style="height: 100%; width: {progressPercent}%; background: var(--accent); border-radius: 999px;"></div>
                 </div>
-                <span style="font-size: 13px; color: var(--text-secondary); flex-shrink: 0;">{progressPercent}%</span>
+                <span style="font-size: 12px; color: var(--accent); font-weight: 600; flex-shrink: 0;">{progressPercent}%</span>
               </div>
             </div>
           </a>
@@ -134,19 +111,20 @@
   <!-- Recently Read -->
   {#if recentlyRead.length > 0}
     <section style="margin-bottom: 48px;">
-      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
-        <h2 style="font-size: 20px; font-weight: 600; color: var(--text-primary); margin: 0;">Recently Read</h2>
-        <a href="/books/library" style="font-size: 13px; color: var(--text-tertiary); text-decoration: none;" class="section-link">View all</a>
+      <div style="display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 20px;">
+        <h2 style="font-family: 'Newsreader', Georgia, serif; font-size: 1.25rem; font-weight: 500; color: var(--text-primary); margin: 0;">Recently Read</h2>
+        <a href="/books/library" style="font-size: 11px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; color: var(--accent); text-decoration: none;">View All →</a>
       </div>
-      <div class="poster-grid">
+      <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 20px;">
         {#each recentlyRead as book}
-          <a href="/books/{book.id}" class="poster-item" title={book.title}>
-            <PosterCard
-              src={book.coverPath}
-              alt={book.title}
-              href="/books/{book.id}"
-              status="watched"
-            />
+          <a href="/books/{book.id}" style="text-decoration: none; display: block;">
+            <div style="aspect-ratio: 2/3; border-radius: 6px; overflow: hidden; background: var(--surface-container); margin-bottom: 10px;">
+              {#if book.coverPath}
+                <img src={book.coverPath} alt={book.title} class="book-cover" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s;" />
+              {/if}
+            </div>
+            <h4 style="font-family: 'Newsreader', Georgia, serif; font-size: 0.9375rem; color: var(--text-primary); margin: 0 0 2px;">{book.title}</h4>
+            <p style="font-size: 0.6875rem; color: var(--text-muted); margin: 0;">{book.author}</p>
           </a>
         {/each}
       </div>
@@ -155,50 +133,41 @@
 
   <!-- Want to Read -->
   <section style="margin-bottom: 48px;">
-    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
-      <h2 style="font-size: 20px; font-weight: 600; color: var(--text-primary); margin: 0;">Want to Read</h2>
-      <a href="/books/shelves" style="font-size: 13px; color: var(--text-tertiary); text-decoration: none;" class="section-link">Shelves</a>
+    <div style="display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 20px;">
+      <h2 style="font-family: 'Newsreader', Georgia, serif; font-size: 1.25rem; font-weight: 500; color: var(--text-primary); margin: 0;">Want to Read</h2>
+      <a href="/books/shelves" style="font-size: 11px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; color: var(--accent); text-decoration: none;">Shelves →</a>
     </div>
     {#if wantToRead.length > 0}
-      <div class="poster-grid">
+      <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 20px;">
         {#each wantToRead as book}
-          <a href="/books/{book.id}" class="poster-item" title={book.title}>
-            <PosterCard
-              src={book.coverPath}
-              alt={book.title}
-              href="/books/{book.id}"
-              status="watchlist"
-            />
+          <a href="/books/{book.id}" style="text-decoration: none; display: block;">
+            <div style="aspect-ratio: 2/3; border-radius: 6px; overflow: hidden; background: var(--surface-container); margin-bottom: 10px;">
+              {#if book.coverPath}
+                <img src={book.coverPath} alt={book.title} class="book-cover" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s;" />
+              {/if}
+            </div>
+            <h4 style="font-family: 'Newsreader', Georgia, serif; font-size: 0.9375rem; color: var(--text-primary); margin: 0 0 2px;">{book.title}</h4>
+            <p style="font-size: 0.6875rem; color: var(--text-muted); margin: 0;">{book.author}</p>
           </a>
         {/each}
       </div>
     {:else}
-      <p style="font-size: 15px; color: var(--text-tertiary);">No books on your want-to-read list yet.</p>
+      <div style="padding: 60px 0; text-align: center;">
+        <p style="font-family: 'Newsreader', Georgia, serif; font-size: 1.125rem; color: var(--text-primary); margin: 0 0 8px;">Your reading list is empty</p>
+        <p style="font-size: 13px; color: var(--text-secondary); margin: 0;">Add books you want to read later.</p>
+      </div>
     {/if}
   </section>
-</div>
+</main>
 {/if}
 
 <style>
-  .poster-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-    gap: 16px;
-  }
-
-  .poster-item {
-    display: block;
-    text-decoration: none;
-    border-radius: 4px;
-    overflow: hidden;
-  }
-
   .reading-row:hover {
-    background: rgba(255, 255, 255, 0.03);
+    background: var(--surface-container) !important;
   }
 
-  .section-link:hover {
-    color: var(--text-secondary);
+  .book-cover:hover {
+    transform: scale(1.05);
   }
 </style>
 

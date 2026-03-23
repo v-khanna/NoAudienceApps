@@ -57,7 +57,7 @@
             class="diary-row"
           >
             <span class="diary-date">
-              {new Date(entry.watchedDate ?? '').toLocaleDateString('en-US', { day: 'numeric' })}
+              {new Date(entry.watchedDate ?? '').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
             </span>
             {#if entry.film.posterPath}
               <img src={entry.film.posterPath} alt={entry.film.title} class="diary-poster" />
@@ -116,8 +116,8 @@
     font-size: 0.6875rem;
     font-weight: 600;
     letter-spacing: 0.05em;
-    width: 24px;
-    text-align: center;
+    width: 52px;
+    text-align: left;
     flex-shrink: 0;
   }
 

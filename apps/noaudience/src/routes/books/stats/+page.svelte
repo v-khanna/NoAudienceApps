@@ -65,109 +65,116 @@
 </script>
 
 {#if loaded}
-<div style="max-width: 720px;">
-  <h1 style="font-size: 28px; font-weight: 700; color: var(--text-primary); margin: 0 0 24px 0;">Reading Stats</h1>
+<main style="padding-bottom: 64px;">
+  <h1 style="font-family: 'Newsreader', Georgia, serif; font-size: 1.75rem; font-weight: 500; color: var(--text-primary); margin: 0 0 8px;">Archival Analytics</h1>
+  <p style="font-size: 13px; color: var(--text-secondary); margin: 0 0 40px;">{readBooks.length} books · {totalPages.toLocaleString()} pages · {averageRating.toFixed(1)} avg</p>
 
-  <!-- Inline summary -->
-  <p style="font-size: 15px; color: var(--text-secondary); margin: 0 0 32px 0;">
-    {readBooks.length} books read &middot; {totalPages.toLocaleString()} pages &middot; {averageRating.toFixed(1)} avg rating &middot; {authorCounts.length} authors
-  </p>
+  <!-- Milestone card -->
+  <div style="background: var(--surface-container-low); border-radius: 10px; padding: 32px; margin-bottom: 40px; position: relative; overflow: hidden;">
+    <p style="font-size: 0.6875rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted); margin: 0 0 8px;">Total Pages Read</p>
+    <span style="font-family: 'Newsreader', Georgia, serif; font-size: 3.5rem; color: var(--text-primary);">{totalPages.toLocaleString()}</span>
+    <div style="position: absolute; right: -24px; bottom: -24px; width: 200px; height: 200px; background: rgba(0,224,84,0.04); border-radius: 50%; filter: blur(40px); pointer-events: none;"></div>
+  </div>
 
-  <!-- Books per year -->
-  {#if booksPerYear.length > 0}
-    <section style="margin-bottom: 40px;">
-      <h2 style="font-size: 20px; font-weight: 600; color: var(--text-primary); margin: 0 0 14px 0;">By Year</h2>
-      <div style="display: flex; flex-direction: column; gap: 6px;">
-        {#each booksPerYear as { year, count }}
+  <!-- Stats grid -->
+  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 40px;">
+    <!-- Rating distribution -->
+    <div style="background: var(--surface-container-low); border-radius: 10px; padding: 24px;">
+      <h2 style="font-family: 'Newsreader', Georgia, serif; font-size: 1.125rem; font-weight: 500; color: var(--text-primary); margin: 0 0 16px;">Ratings</h2>
+      <div style="display: flex; flex-direction: column; gap: 8px;">
+        {#each [5, 4, 3, 2, 1] as star}
           <div style="display: flex; align-items: center; gap: 10px;">
-            <span style="font-size: 13px; color: var(--text-tertiary); width: 40px; text-align: right; flex-shrink: 0;">{year}</span>
-            <div style="flex: 1; height: 8px; background: var(--border); border-radius: 4px; overflow: hidden;">
-              <div style="height: 100%; width: {(count / maxYearCount) * 100}%; background: var(--accent); border-radius: 4px;"></div>
+            <span style="font-size: 12px; color: var(--text-muted); width: 44px; text-align: right; flex-shrink: 0;">{star}★</span>
+            <div style="flex: 1; height: 4px; background: var(--surface-container-high); border-radius: 999px; overflow: hidden;">
+              <div style="height: 100%; width: {maxRatingCount > 0 ? (ratingDist[star] / maxRatingCount) * 100 : 0}%; background: var(--accent); border-radius: 999px;"></div>
             </div>
-            <span style="font-size: 13px; color: var(--text-secondary); width: 24px; flex-shrink: 0;">{count}</span>
+            <span style="font-size: 12px; color: var(--text-muted); width: 20px; flex-shrink: 0;">{ratingDist[star]}</span>
           </div>
         {/each}
       </div>
-    </section>
-  {/if}
-
-  <!-- Rating distribution -->
-  <section style="margin-bottom: 40px;">
-    <h2 style="font-size: 20px; font-weight: 600; color: var(--text-primary); margin: 0 0 14px 0;">Ratings</h2>
-    <div style="display: flex; flex-direction: column; gap: 6px;">
-      {#each [5, 4, 3, 2, 1] as star}
-        <div style="display: flex; align-items: center; gap: 10px;">
-          <span style="font-size: 13px; color: var(--text-tertiary); width: 52px; text-align: right; flex-shrink: 0;">{star} star{star !== 1 ? 's' : ''}</span>
-          <div style="flex: 1; height: 8px; background: var(--border); border-radius: 4px; overflow: hidden;">
-            <div style="height: 100%; width: {maxRatingCount > 0 ? (ratingDist[star] / maxRatingCount) * 100 : 0}%; background: var(--accent); border-radius: 4px;"></div>
-          </div>
-          <span style="font-size: 13px; color: var(--text-secondary); width: 24px; flex-shrink: 0;">{ratingDist[star]}</span>
-        </div>
-      {/each}
     </div>
-  </section>
 
-  <!-- Top genres -->
-  {#if genreCounts.length > 0}
-    <section style="margin-bottom: 40px;">
-      <h2 style="font-size: 20px; font-weight: 600; color: var(--text-primary); margin: 0 0 14px 0;">Top Genres</h2>
-      <div style="display: flex; flex-direction: column; gap: 4px;">
-        {#each genreCounts.slice(0, 8) as { genre, count }}
-          <div class="list-row" style="display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; border-radius: 4px; transition: background 150ms ease-out;">
-            <span style="font-size: 15px; color: var(--text-primary); text-transform: capitalize;">{genre}</span>
-            <span style="font-size: 13px; color: var(--text-tertiary);">{count}</span>
-          </div>
-        {/each}
+    <!-- Genres -->
+    {#if genreCounts.length > 0}
+      <div style="background: var(--surface-container-low); border-radius: 10px; padding: 24px;">
+        <h2 style="font-family: 'Newsreader', Georgia, serif; font-size: 1.125rem; font-weight: 500; color: var(--text-primary); margin: 0 0 16px;">Genre Distribution</h2>
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+          {#each genreCounts.slice(0, 6) as { genre, count }}
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <span style="font-size: 13px; color: var(--text-primary); flex: 1; text-transform: capitalize;">{genre}</span>
+              <div style="width: 100px; height: 4px; background: var(--surface-container-high); border-radius: 999px; overflow: hidden;">
+                <div style="height: 100%; width: {(count / maxGenreCount) * 100}%; background: var(--accent); border-radius: 999px;"></div>
+              </div>
+              <span style="font-size: 12px; color: var(--text-muted); width: 20px; text-align: right;">{count}</span>
+            </div>
+          {/each}
+        </div>
       </div>
-    </section>
-  {/if}
+    {/if}
+  </div>
 
-  <!-- Most-read authors -->
-  {#if authorCounts.length > 0}
-    <section style="margin-bottom: 40px;">
-      <h2 style="font-size: 20px; font-weight: 600; color: var(--text-primary); margin: 0 0 14px 0;">Most-Read Authors</h2>
-      <div style="display: flex; flex-direction: column; gap: 4px;">
-        {#each authorCounts.slice(0, 8) as { author, count }}
-          <div class="list-row" style="display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; border-radius: 4px; transition: background 150ms ease-out;">
-            <span style="font-size: 15px; color: var(--text-primary);">{author}</span>
-            <span style="font-size: 13px; color: var(--text-tertiary);">{count} book{count !== 1 ? 's' : ''}</span>
-          </div>
-        {/each}
+  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 40px;">
+    <!-- Authors -->
+    {#if authorCounts.length > 0}
+      <div style="background: var(--surface-container-low); border-radius: 10px; padding: 24px;">
+        <h2 style="font-family: 'Newsreader', Georgia, serif; font-size: 1.125rem; font-weight: 500; color: var(--text-primary); margin: 0 0 16px;">Frequent Contributors</h2>
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+          {#each authorCounts.slice(0, 6) as { author, count }, i}
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <span style="font-size: 12px; color: var(--text-muted); width: 16px;">{i + 1}</span>
+              <span style="font-size: 13px; color: var(--text-primary); flex: 1;">{author}</span>
+              <span style="font-size: 12px; color: var(--accent); font-weight: 600;">{count}</span>
+            </div>
+          {/each}
+        </div>
       </div>
-    </section>
-  {/if}
+    {/if}
 
-  <!-- Longest / Shortest -->
-  {#if longestBook || shortestBook}
-    <section style="margin-bottom: 40px;">
-      <h2 style="font-size: 20px; font-weight: 600; color: var(--text-primary); margin: 0 0 14px 0;">Extremes</h2>
-      <div style="display: flex; flex-direction: column; gap: 6px; font-size: 15px;">
-        {#if longestBook}
-          <div style="display: flex; align-items: center; gap: 10px; padding: 8px 12px;">
-            <span style="color: var(--text-tertiary); width: 64px; flex-shrink: 0;">Longest</span>
-            <a href="/books/{longestBook.book.id}" style="color: var(--text-primary); text-decoration: none;" class="title-link">{longestBook.book.title}</a>
-            <span style="color: var(--text-tertiary); margin-left: auto; flex-shrink: 0;">{longestBook.book.pageCount}p</span>
+    <!-- Extremes + Per Year -->
+    <div style="display: flex; flex-direction: column; gap: 24px;">
+      {#if longestBook || shortestBook}
+        <div style="background: var(--surface-container-low); border-radius: 10px; padding: 24px;">
+          <h2 style="font-family: 'Newsreader', Georgia, serif; font-size: 1.125rem; font-weight: 500; color: var(--text-primary); margin: 0 0 16px;">Extremes</h2>
+          {#if longestBook}
+            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+              <span style="font-size: 12px; color: var(--text-muted); width: 56px;">Longest</span>
+              <a href="/books/{longestBook.book.id}" class="title-link" style="font-size: 13px; color: var(--text-primary); text-decoration: none; flex: 1;">{longestBook.book.title}</a>
+              <span style="font-size: 12px; color: var(--accent);">{longestBook.book.pageCount}p</span>
+            </div>
+          {/if}
+          {#if shortestBook}
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span style="font-size: 12px; color: var(--text-muted); width: 56px;">Shortest</span>
+              <a href="/books/{shortestBook.book.id}" class="title-link" style="font-size: 13px; color: var(--text-primary); text-decoration: none; flex: 1;">{shortestBook.book.title}</a>
+              <span style="font-size: 12px; color: var(--accent);">{shortestBook.book.pageCount}p</span>
+            </div>
+          {/if}
+        </div>
+      {/if}
+
+      {#if booksPerYear.length > 0}
+        <div style="background: var(--surface-container-low); border-radius: 10px; padding: 24px;">
+          <h2 style="font-family: 'Newsreader', Georgia, serif; font-size: 1.125rem; font-weight: 500; color: var(--text-primary); margin: 0 0 16px;">By Year</h2>
+          <div style="display: flex; flex-direction: column; gap: 8px;">
+            {#each booksPerYear as { year, count }}
+              <div style="display: flex; align-items: center; gap: 10px;">
+                <span style="font-size: 12px; color: var(--text-muted); width: 32px;">{year}</span>
+                <div style="flex: 1; height: 4px; background: var(--surface-container-high); border-radius: 999px; overflow: hidden;">
+                  <div style="height: 100%; width: {(count / maxYearCount) * 100}%; background: var(--accent); border-radius: 999px;"></div>
+                </div>
+                <span style="font-size: 12px; color: var(--text-muted); width: 20px; text-align: right;">{count}</span>
+              </div>
+            {/each}
           </div>
-        {/if}
-        {#if shortestBook}
-          <div style="display: flex; align-items: center; gap: 10px; padding: 8px 12px;">
-            <span style="color: var(--text-tertiary); width: 64px; flex-shrink: 0;">Shortest</span>
-            <a href="/books/{shortestBook.book.id}" style="color: var(--text-primary); text-decoration: none;" class="title-link">{shortestBook.book.title}</a>
-            <span style="color: var(--text-tertiary); margin-left: auto; flex-shrink: 0;">{shortestBook.book.pageCount}p</span>
-          </div>
-        {/if}
-      </div>
-    </section>
-  {/if}
-</div>
+        </div>
+      {/if}
+    </div>
+  </div>
+</main>
 {/if}
 
 <style>
-  .list-row:hover {
-    background: rgba(255, 255, 255, 0.03);
-  }
-
   .title-link:hover {
-    color: var(--accent);
+    color: var(--accent) !important;
   }
 </style>
