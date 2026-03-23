@@ -1,40 +1,46 @@
 # NoAudience
 
-> Does every hobby need an audience?
+> Does every hobby need an audience? No. No it does not.
 
-Track what you watch, read, and think — without broadcasting it. NoAudience is a private, local-first desktop app for logging movies, books, articles, and your own writing. No accounts. No social graph. No cloud. Your data stays on your machine in a single SQLite file.
+A private, local-first desktop app for the kind of person who tracks movies in a spreadsheet and thinks Letterboxd has too much social. Log films, books, articles, and your own writing — all stored in a single SQLite file on your machine. No accounts. No cloud. No one sees your 3-star review of a film everyone else gave 5.
 
 ## What it does
 
-Five modules, each usable on its own or together:
+Five modules for people who consume media like it's a full-time job:
 
-- **Films** — Log movies with ratings, reviews, and tags. Diary view, watchlist, custom lists, stats. Metadata and posters pulled from TMDB. Designed after Letterboxd, minus the social layer.
-- **Books** — Shelves (want to read, reading, read), progress tracking, reading challenges, stats. Covers and metadata from Open Library. Designed after Goodreads, minus the social layer.
-- **Articles** — Auto-sync your Substack via RSS. Save other posts by URL. Highlight and annotate.
-- **Writing** — Markdown editor with live preview. Write about what you consume, or write about anything. Link your writing to specific films, books, or articles in your library.
-- **Chess** — Import PGN files, replay games, annotate positions.
+- **Films** — Log movies with ratings, reviews, tags. Diary view, watchlist, custom ranked lists with drag-to-reorder, stats dashboard. Posters and metadata from TMDB. Think Letterboxd, but it respects your privacy and doesn't make you feel bad about watching The Meg.
+- **Books** — Shelves (want to read, reading, read — actually clickable and changeable, imagine that), progress tracking, reading challenges, analytics. Covers from Open Library. Goodreads without the influencers.
+- **Articles** — Sync your Substack via RSS. Save posts by URL. Highlight and annotate. For when you want to remember what you read instead of just sharing it.
+- **Writing** — Markdown editor with live preview. Write about what you consume, or write about nothing. Link entries to films, books, or articles in your library.
+- **Chess** — Import PGN files, replay games, annotate positions. Because apparently that's a hobby now.
 
-## Standalone builds
+## Design
 
-Not everyone wants the full suite. Films and Books ship as independent apps:
-
-| App | Modules | Size |
-|-----|---------|------|
-| NoAudience | Everything | ~10MB |
-| NoAudience Films | Films only | ~3MB |
-| NoAudience Books | Books only | ~3MB |
+Dark mode only. Editorial typography via Newsreader serif for headings, Inter for everything else. The aesthetic is "dimly lit study" — lots of negative space, tonal surface layering instead of borders, glass-morphism where it matters. Designed in Google Stitch, implemented one CSS change at a time because we learned the hard way that rewriting pages from scratch breaks everything.
 
 ## Stack
 
-- [Tauri v2](https://v2.tauri.app/) — native desktop shell, ~5MB vs Electron's 120MB
-- [SvelteKit](https://kit.svelte.dev/) — frontend
-- [SQLite](https://sqlite.org/) + [Drizzle ORM](https://orm.drizzle.team/) — local database
-- [TipTap](https://tiptap.dev/) — rich text editor (via Tipex for Svelte)
+- [Tauri v2](https://v2.tauri.app/) — native desktop shell (~5MB, not Electron's 120MB tax)
+- [SvelteKit](https://kit.svelte.dev/) + Svelte 5 runes — frontend
+- [SQLite](https://sqlite.org/) + [Drizzle ORM](https://orm.drizzle.team/) — local database via sqlite-proxy
 - [Tailwind CSS](https://tailwindcss.com/) — styling
+- [TipTap](https://tiptap.dev/) — rich text editor
+
+## Running it
+
+```bash
+# Install deps
+pnpm install
+
+# Run the desktop app
+npx --yes @tauri-apps/cli dev
+```
+
+Opens in a native Tauri window. Does not work in a browser — the database needs the native runtime.
 
 ## Status
 
-Early development. See [SPEC.md](docs/SPEC.md) for the full design document.
+Active development. Films and Books modules are functional with Stitch-designed UI. Articles, Writing, and Chess are scaffolded but less polished. See `docs/session-2026-03-24-stitch-implementation.md` for the latest implementation details.
 
 ## License
 
