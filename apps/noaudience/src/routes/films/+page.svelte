@@ -49,168 +49,146 @@
   }
 </script>
 
-<div>
-  <!-- Header -->
-  <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 32px;">
-    <h1 style="font-size: 28px; font-weight: 700; color: var(--text-primary); margin: 0;">Films</h1>
-    <div style="position: relative;">
-      <input
-        type="text"
-        bind:value={searchQuery}
-        oninput={handleSearch}
-        onfocus={() => { if (searchResults.length) showSearchResults = true; }}
-        onblur={() => setTimeout(() => showSearchResults = false, 200)}
-        placeholder="Search films..."
-        style="
-          height: 40px;
-          padding: 0 12px;
-          font-size: 15px;
-          background: var(--bg-inset);
-          border: 1px solid var(--border);
-          border-radius: 4px;
-          color: var(--text-primary);
-          outline: none;
-          width: 320px;
-        "
-      />
-      {#if showSearchResults && searchResults.length > 0}
-        <div class="search-dropdown">
-          {#each searchResults as film}
-            <a href="/films/{film.id}" class="search-result">
-              {#if film.posterPath}
-                <img src={film.posterPath} alt="" style="width: 28px; height: 42px; object-fit: cover; border-radius: 2px; border: 1px solid var(--border); flex-shrink: 0;" />
-              {/if}
-              <span style="font-size: 15px; color: var(--text-primary);">{film.title}</span>
-              <span style="font-size: 13px; color: var(--text-tertiary);">{film.year}</span>
-            </a>
-          {/each}
-        </div>
-      {/if}
-    </div>
-    <button
-      onclick={() => logModalOpen = true}
-      style="
-        height: 40px;
-        padding: 0 16px;
-        font-size: 15px;
-        font-weight: 500;
-        color: var(--accent);
-        background: transparent;
-        border: 1px solid var(--border);
-        border-radius: 4px;
-        cursor: pointer;
-        transition: background 150ms ease-out;
-      "
-      class="log-btn"
-    >
-      Log
-    </button>
-    <div style="flex: 1;"></div>
-    <span style="font-size: 13px; color: var(--text-secondary);">
-      {stats.totalFilms} films · {stats.totalHours} hours · {stats.averageRating} avg
-    </span>
-  </div>
+<main style="padding-bottom: 64px;">
 
-  <!-- Empty state when no data at all -->
-  {#if recentLogs.length === 0 && watchlist.length === 0 && diaryEntries.length === 0 && stats.totalFilms === 0}
-    <div style="padding: 48px 0; text-align: center; color: var(--text-tertiary); font-size: 15px;">
-      Use the Log button to add films.
-    </div>
-  {:else}
-    <!-- Recently Watched -->
-    {#if recentLogs.length > 0}
-      <section style="margin-bottom: 48px;">
-        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
-          <h2 style="font-size: 20px; font-weight: 600; color: var(--text-primary); margin: 0;">Recently Watched</h2>
-          <a href="/films/diary" style="font-size: 13px; color: var(--text-tertiary); text-decoration: none;" class="section-link">View all</a>
+  <!-- Hero: Featured + Stats bento -->
+  <section style="margin-bottom: 64px; display: grid; grid-template-columns: 8fr 4fr; gap: 24px; align-items: stretch;">
+    <!-- Featured review (latest diary entry with backdrop) -->
+    {#if diaryEntries.length > 0}
+      {@const featured = diaryEntries[0]}
+      <div style="position: relative; overflow: hidden; border-radius: 12px; background: var(--surface-container-low); min-height: 360px;">
+        {#if featured.film.backdropPath}
+          <div style="position: absolute; inset: 0; z-index: 0;">
+            <img src={featured.film.backdropPath} alt="" style="width: 100%; height: 100%; object-fit: cover; opacity: 0.4;" />
+          </div>
+          <div style="position: absolute; inset: 0; background: linear-gradient(to top, var(--surface-base) 10%, transparent 70%); z-index: 1;"></div>
+        {/if}
+        <div style="position: absolute; bottom: 0; left: 0; padding: 32px; z-index: 2;">
+          <span style="display: inline-block; padding: 4px 12px; border-radius: 999px; background: rgba(0,224,84,0.15); color: var(--accent); font-size: 10px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 12px;">Featured Review</span>
+          <h2 style="font-family: 'Newsreader', Georgia, serif; font-size: 2.5rem; font-weight: 700; color: #fff; margin: 0 0 12px; line-height: 1.15;">{featured.film.title}</h2>
+          {#if featured.review}
+            <p style="font-family: 'Newsreader', Georgia, serif; font-size: 1.125rem; color: #cbd5e1; max-width: 500px; font-style: italic; line-height: 1.6; margin: 0;">"{featured.review.length > 180 ? featured.review.slice(0, 180) + '...' : featured.review}"</p>
+          {/if}
         </div>
-        <div class="poster-grid">
-          {#each recentLogs as entry}
-            <a href="/films/{entry.film.id}" class="poster-item" title={entry.film.title}>
-              <PosterCard
-                src={entry.film.posterPath ?? ''}
-                alt={entry.film.title}
-                href="/films/{entry.film.id}"
-                status="watched"
-              />
-            </a>
-          {/each}
-        </div>
-      </section>
-    {/if}
-
-    <!-- Diary Preview -->
-    <section style="margin-bottom: 48px;">
-      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
-        <h2 style="font-size: 20px; font-weight: 600; color: var(--text-primary); margin: 0;">Diary</h2>
-        <a href="/films/diary" style="font-size: 13px; color: var(--text-tertiary); text-decoration: none;" class="section-link">View all</a>
       </div>
-      {#if diaryEntries.length > 0}
-        <div>
-          {#each diaryEntries as entry, i}
-            <a
-              href="/films/{entry.film.id}"
-              class="diary-row"
-              style="
-                display: flex;
-                align-items: center;
-                gap: 12px;
-                height: 48px;
-                padding: 0 8px;
-                text-decoration: none;
-                border-bottom: {i < diaryEntries.length - 1 ? '1px solid var(--border-subtle)' : 'none'};
-                transition: background 150ms ease-out;
-              "
-            >
-              <span style="font-size: 13px; color: var(--text-tertiary); width: 56px; flex-shrink: 0;">
-                {new Date(entry.watchedDate ?? '').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-              </span>
-              <img
-                src={entry.film.posterPath}
-                alt={entry.film.title}
-                style="width: 28px; height: 42px; object-fit: cover; border-radius: 2px; flex-shrink: 0;"
-              />
-              <span style="font-size: 15px; color: var(--text-primary); flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{entry.film.title}</span>
-              <span style="font-size: 13px; color: var(--text-tertiary); flex-shrink: 0;">{entry.film.year}</span>
-              <div style="flex-shrink: 0;">
-                <StarRating value={entry.rating ?? 0} size="sm" readonly={true} />
-              </div>
-              {#if entry.liked}
-                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#FF6B6B" stroke="none" style="flex-shrink: 0;">
-                  <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-                </svg>
-              {/if}
-            </a>
-          {/each}
-        </div>
-      {:else}
-        <p style="font-size: 15px; color: var(--text-tertiary);">No diary entries yet.</p>
-      {/if}
-    </section>
-
-    <!-- Watchlist -->
-    {#if watchlist.length > 0}
-      <section style="margin-bottom: 48px;">
-        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
-          <h2 style="font-size: 20px; font-weight: 600; color: var(--text-primary); margin: 0;">Watchlist</h2>
-          <a href="/films/watchlist" style="font-size: 13px; color: var(--text-tertiary); text-decoration: none;" class="section-link">View all</a>
-        </div>
-        <div class="poster-grid">
-          {#each watchlist as entry}
-            <a href="/films/{entry.film.id}" class="poster-item" title={entry.film.title}>
-              <PosterCard
-                src={entry.film.posterPath ?? ''}
-                alt={entry.film.title}
-                href="/films/{entry.film.id}"
-                status="watchlist"
-              />
-            </a>
-          {/each}
-        </div>
-      </section>
+    {:else}
+      <div style="border-radius: 12px; background: var(--surface-container-low); min-height: 360px; display: flex; align-items: center; justify-content: center;">
+        <p style="color: var(--text-muted); font-size: 14px;">Log a film to see your featured review here.</p>
+      </div>
     {/if}
+
+    <!-- Private Library stats card -->
+    <div style="background: var(--surface-container-low); padding: 32px; border-radius: 12px; display: flex; flex-direction: column; justify-content: space-between;">
+      <div>
+        <h3 style="font-family: 'Newsreader', Georgia, serif; font-size: 1.5rem; font-weight: 700; color: #fff; margin: 0 0 8px;">Private Library</h3>
+        <p style="font-size: 13px; color: var(--text-secondary); line-height: 1.5; margin: 0 0 16px;">
+          You have cataloged {stats.totalFilms.toLocaleString()} films across {stats.totalHours.toLocaleString()} hours.
+        </p>
+        <button
+          onclick={() => logModalOpen = true}
+          style="padding: 8px 20px; border-radius: 999px; background: linear-gradient(135deg, var(--accent), #005d1e); color: #fff; border: none; font-size: 13px; font-weight: 600; cursor: pointer; transition: opacity 150ms;"
+          onmouseenter={(e) => e.currentTarget.style.opacity = '0.85'}
+          onmouseleave={(e) => e.currentTarget.style.opacity = '1'}
+        >
+          + Log Film
+        </button>
+      </div>
+      <div style="margin-top: 24px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; font-size: 11px; margin-bottom: 6px;">
+          <span style="color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.1em;">Average Rating</span>
+          <span style="color: var(--accent); font-weight: 700;">{stats.averageRating.toFixed(1)} / 5</span>
+        </div>
+        <div style="width: 100%; height: 4px; background: var(--surface-container); border-radius: 999px; overflow: hidden;">
+          <div style="height: 100%; background: var(--accent); border-radius: 999px; width: {(stats.averageRating / 5) * 100}%;"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Latest in Diary -->
+  <section style="margin-bottom: 64px;">
+    <div style="display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 32px;">
+      <h2 style="font-family: 'Newsreader', Georgia, serif; font-size: 1.5rem; font-weight: 700; color: #fff; margin: 0;">Latest in Diary</h2>
+      <a href="/films/diary" style="font-size: 11px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; color: var(--accent); text-decoration: none; display: flex; align-items: center; gap: 4px;">
+        View Journal →
+      </a>
+    </div>
+    {#if diaryEntries.length > 0}
+      <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 20px;">
+        {#each diaryEntries as entry, i}
+          <a href="/films/{entry.film.id}" class="diary-card" style="background: {i % 2 === 0 ? 'var(--surface-container-low)' : 'var(--surface-container)'}; border-radius: 12px; padding: 20px; text-decoration: none; transition: background 200ms;">
+            <div style="display: flex; gap: 14px; margin-bottom: 12px;">
+              {#if entry.film.posterPath}
+                <img src={entry.film.posterPath} alt={entry.film.title} style="width: 56px; aspect-ratio: 2/3; object-fit: cover; border-radius: 4px; flex-shrink: 0;" />
+              {/if}
+              <div>
+                <p style="font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.15em; margin: 0 0 4px;">
+                  {new Date(entry.watchedDate ?? '').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                </p>
+                <h4 style="font-family: 'Newsreader', Georgia, serif; font-size: 1rem; font-weight: 700; color: #fff; margin: 0 0 6px;">{entry.film.title} ({entry.film.year})</h4>
+                <div style="flex-shrink: 0;">
+                  <StarRating value={entry.rating ?? 0} size="sm" readonly={true} />
+                </div>
+              </div>
+            </div>
+            {#if entry.review}
+              <p style="font-family: 'Newsreader', Georgia, serif; font-size: 13px; color: var(--text-secondary); font-style: italic; line-height: 1.5; margin: 0; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;">"{entry.review}"</p>
+            {/if}
+          </a>
+        {/each}
+      </div>
+    {:else}
+      <p style="font-size: 14px; color: var(--text-muted);">No diary entries yet. Log a film to get started.</p>
+    {/if}
+  </section>
+
+  <!-- Watchlist Poster Grid -->
+  <section>
+    <div style="display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 32px;">
+      <div style="display: flex; align-items: center; gap: 12px;">
+        <h2 style="font-family: 'Newsreader', Georgia, serif; font-size: 1.5rem; font-weight: 700; color: #fff; margin: 0;">Watchlist</h2>
+        {#if watchlist.length > 0}
+          <span style="padding: 2px 8px; border-radius: 4px; background: var(--surface-container); color: var(--text-muted); font-size: 10px; font-weight: 700;">{watchlist.length} PENDING</span>
+        {/if}
+      </div>
+      <a href="/films/watchlist" style="font-size: 11px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; color: var(--accent); text-decoration: none;">View All →</a>
+    </div>
+    {#if watchlist.length > 0}
+      <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 20px;">
+        {#each watchlist as entry}
+          <a href="/films/{entry.film.id}" class="poster-card" style="text-decoration: none; cursor: pointer;">
+            <div style="aspect-ratio: 2/3; border-radius: 6px; overflow: hidden; background: var(--surface-container); margin-bottom: 10px; position: relative;">
+              {#if entry.film.posterPath}
+                <img src={entry.film.posterPath} alt={entry.film.title} class="poster-img" style="width: 100%; height: 100%; object-fit: cover; opacity: 0.85; transition: opacity 0.5s, transform 0.5s;" />
+              {/if}
+            </div>
+            <h5 style="font-size: 14px; font-weight: 600; color: #fff; margin: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{entry.film.title}</h5>
+            <p style="font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.1em; margin: 4px 0 0;">
+              {entry.film.year ?? ''}{#if entry.film.genres?.length} • {(entry.film.genres as string[])[0]}{/if}
+            </p>
+          </a>
+        {/each}
+      </div>
+    {:else}
+      <p style="font-size: 14px; color: var(--text-muted);">Your watchlist is empty.</p>
+    {/if}
+  </section>
+
+  <!-- Search dropdown (hidden until active) -->
+  {#if showSearchResults && searchResults.length > 0}
+    <div class="search-dropdown">
+      {#each searchResults as film}
+        <a href="/films/{film.id}" class="search-result">
+          {#if film.posterPath}
+            <img src={film.posterPath} alt="" style="width: 28px; height: 42px; object-fit: cover; border-radius: 2px; flex-shrink: 0;" />
+          {/if}
+          <span style="font-size: 14px; color: var(--text-primary);">{film.title}</span>
+          <span style="font-size: 12px; color: var(--text-muted);">{film.year}</span>
+        </a>
+      {/each}
+    </div>
   {/if}
-</div>
+</main>
 
 <LogModal
   open={logModalOpen}
@@ -219,56 +197,38 @@
 />
 
 <style>
-  .poster-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-    gap: 16px;
+  .diary-card:hover {
+    background: var(--surface-container-high) !important;
   }
 
-  .poster-item {
-    display: block;
-    text-decoration: none;
-    border-radius: 4px;
-    overflow: hidden;
-  }
-
-  .diary-row:hover {
-    background: rgba(255, 255, 255, 0.03);
-  }
-
-  .log-btn:hover {
-    background: rgba(255, 255, 255, 0.03);
-  }
-
-  .section-link:hover {
-    color: var(--text-secondary);
+  .poster-card:hover .poster-img {
+    opacity: 1 !important;
+    transform: scale(1.08);
   }
 
   .search-dropdown {
-    position: absolute;
-    z-index: 10;
+    position: fixed;
+    z-index: 100;
+    top: 80px;
+    right: 48px;
     width: 360px;
-    margin-top: 4px;
-    background: var(--bg-elevated);
-    border: 1px solid var(--border);
-    border-radius: 4px;
+    background: var(--surface-container-highest, #31353A);
+    border: 1px solid var(--ghost-border);
+    border-radius: 8px;
     max-height: 300px;
     overflow-y: auto;
+    box-shadow: 0 24px 48px -12px rgba(0, 0, 0, 0.5);
   }
 
   .search-result {
     display: flex;
     align-items: center;
     gap: 10px;
-    padding: 8px 10px;
+    padding: 8px 12px;
     text-decoration: none;
-    border-bottom: 1px solid var(--border-subtle);
     transition: background-color 150ms ease-out;
   }
-  .search-result:last-child {
-    border-bottom: none;
-  }
   .search-result:hover {
-    background-color: rgba(255, 255, 255, 0.03);
+    background-color: var(--surface-container-low);
   }
 </style>
