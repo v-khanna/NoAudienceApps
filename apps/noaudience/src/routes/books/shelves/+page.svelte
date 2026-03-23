@@ -62,8 +62,8 @@
 </script>
 
 {#if loaded}
-<div>
-  <h1 style="font-size: 28px; font-weight: 700; color: var(--text-primary); margin: 0 0 32px 0;">Shelves</h1>
+<main style="padding-bottom: 64px;">
+  <h1 style="font-family: 'Newsreader', Georgia, serif; font-size: 1.75rem; font-weight: 500; color: var(--text-primary); margin: 0 0 32px 0;">Shelves</h1>
 
   <div style="display: flex; flex-direction: column; gap: 4px;">
     {#each allShelvesData as shelf}
@@ -118,20 +118,12 @@
       bind:value={newShelfName}
       onkeydown={handleKeydown}
       placeholder="Add shelf..."
-      style="
-        height: 40px;
-        padding: 0 12px;
-        font-size: 15px;
-        background: var(--bg-inset);
-        border: 1px solid var(--border);
-        border-radius: 4px;
-        color: var(--text-primary);
-        outline: none;
-        width: 240px;
-      "
+      style="height: 44px; padding: 0 14px; font-size: 14px; background: var(--surface-container-low); border: none; border-bottom: 2px solid transparent; border-radius: 6px; color: var(--text-primary); outline: none; width: 280px; transition: border-color 150ms;"
+      onfocus={(e) => e.currentTarget.style.borderBottomColor = 'var(--accent)'}
+      onblur={(e) => e.currentTarget.style.borderBottomColor = 'transparent'}
     />
   </div>
-</div>
+</main>
 {/if}
 
 <style>

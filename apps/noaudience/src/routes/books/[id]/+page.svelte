@@ -1,5 +1,6 @@
 <script lang="ts">
   import { page } from '$app/stores';
+  import { onMount, onDestroy } from 'svelte';
   import StarRating from '@noaudience/core/components/StarRating.svelte';
   import {
     getBookById,
@@ -13,6 +14,9 @@
     updateReview,
     assignBookToShelf,
   } from '$lib/books/db';
+  import { getDb } from '@noaudience/core/db';
+  import { bookReviews } from '@noaudience/core/db/schema';
+  import { eq } from 'drizzle-orm';
   import type { Book, BookShelf, BookReview, BookProgressEntry } from '$lib/books/mock';
 
   let book = $state<Book | undefined>(undefined);
@@ -150,6 +154,31 @@
     }
   }
 
+  // Back navigation
+  function handleKeydown(e: KeyboardEvent) {
+    if (e.key === 'Escape') history.back();
+  }
+  onMount(() => window.addEventListener('keydown', handleKeydown));
+  onDestroy(() => window.removeEventListener('keydown', handleKeydown));
+
+  // Change shelf (Read / Currently Reading / Want to Read)
+  async function changeShelf(shelfName: string) {
+    if (!book) return;
+    const targetShelf = allShelvesData.find(s => s.name === shelfName);
+    if (!targetShelf) return;
+    await assignBookToShelf(book.id, targetShelf.id);
+    exclusiveShelf = targetShelf;
+  }
+
+  // Delete review
+  async function deleteReview() {
+    if (!book || !review) return;
+    const db = getDb();
+    await db.delete(bookReviews).where(eq(bookReviews.bookId, book.id));
+    review = undefined;
+    showReviewForm = false;
+  }
+
   function formatDate(dateStr: string): string {
     if (!dateStr) return '';
     try {
@@ -162,29 +191,41 @@
 
 {#if loaded}
 {#if book}
+  <main style="padding-bottom: 64px;">
+    <!-- Back -->
+    <button onclick={() => history.back()} style="display: inline-flex; align-items: center; gap: 4px; background: none; border: none; color: var(--text-muted); font-size: 12px; text-transform: uppercase; letter-spacing: 0.1em; cursor: pointer; padding: 0; margin-bottom: 24px; transition: color 150ms;"
+      onmouseenter={(e) => e.currentTarget.style.color = 'var(--text-primary)'}
+      onmouseleave={(e) => e.currentTarget.style.color = 'var(--text-muted)'}
+    >← Back</button>
+
   <div style="display: flex; gap: 32px;">
     <!-- Left: cover -->
     <div style="flex-shrink: 0; width: 200px;">
-      <img
-        src={book.coverPath}
-        alt={book.title}
-        style="width: 100%; border-radius: 4px; border: 1px solid var(--border);"
-        loading="lazy"
-      />
+      {#if book.coverPath}
+        <img src={book.coverPath} alt={book.title} style="width: 100%; border-radius: 6px;" loading="lazy" />
+      {:else}
+        <div style="width: 100%; aspect-ratio: 2/3; background: var(--surface-container); border-radius: 6px; display: flex; align-items: center; justify-content: center; color: var(--text-muted); font-size: 48px;">📖</div>
+      {/if}
     </div>
 
     <!-- Right: info -->
     <div style="flex: 1; min-width: 0;">
-      <h1 style="font-size: 28px; font-weight: 700; color: var(--text-primary); margin: 0;">{book.title}</h1>
+      <h1 style="font-family: 'Newsreader', Georgia, serif; font-size: 1.75rem; font-weight: 500; color: var(--text-primary); margin: 0;">{book.title}</h1>
       <p style="font-size: 15px; color: var(--text-secondary); margin: 6px 0 0 0;">{book.author}</p>
 
-      <!-- Shelf indicator -->
-      {#if exclusiveShelf}
-        <div style="display: flex; align-items: center; gap: 8px; margin-top: 16px;">
-          <span style="width: 8px; height: 8px; border-radius: 50%; background: {exclusiveShelf.name === 'Read' ? 'var(--accent)' : exclusiveShelf.name === 'Currently Reading' ? '#40BCF4' : '#FF8000'}; flex-shrink: 0;"></span>
-          <span style="font-size: 15px; color: var(--text-secondary);">{exclusiveShelf.name}</span>
-        </div>
-      {/if}
+      <!-- Shelf selector — clickable buttons -->
+      <div style="display: flex; gap: 6px; margin-top: 16px; flex-wrap: wrap;">
+        {#each ['Want to Read', 'Currently Reading', 'Read'] as shelfName}
+          <button
+            onclick={() => changeShelf(shelfName)}
+            style="padding: 5px 14px; border-radius: 999px; font-size: 12px; font-weight: 500; border: none; cursor: pointer; transition: all 150ms;
+              background: {exclusiveShelf?.name === shelfName ? 'var(--accent)' : 'var(--surface-container-low)'};
+              color: {exclusiveShelf?.name === shelfName ? '#00390F' : 'var(--text-secondary)'};"
+          >
+            {shelfName}
+          </button>
+        {/each}
+      </div>
 
       <!-- Rating -->
       <div style="margin-top: 16px;">
@@ -234,7 +275,7 @@
       {/if}
 
       <!-- Review section -->
-      <div style="margin-top: 28px; padding-top: 20px; border-top: 1px solid var(--border);">
+      <div style="margin-top: 28px; padding-top: 20px; background: var(--surface-container-low); margin-left: -20px; margin-right: -20px; padding: 20px; border-radius: 10px;">
         {#if showReviewForm}
           <!-- Review form -->
           <div style="display: flex; flex-direction: column; gap: 16px;">
@@ -373,13 +414,14 @@
           {#if review.review}
             <p style="font-size: 15px; color: var(--text-secondary); line-height: 1.6; margin: 0 0 12px 0;">"{review.review}"</p>
           {/if}
-          <button
-            onclick={openReviewForm}
-            class="text-btn"
-            style="font-size: 14px; color: var(--accent); background: none; border: none; padding: 0; cursor: pointer;"
-          >
-            Edit review
-          </button>
+          <div style="display: flex; gap: 16px; align-items: center;">
+            <button onclick={openReviewForm} class="text-btn" style="font-size: 13px; color: var(--accent); background: none; border: none; padding: 0; cursor: pointer;">
+              Edit review
+            </button>
+            <button onclick={deleteReview} class="text-btn" style="font-size: 13px; color: var(--color-error, #FFB4AB); background: none; border: none; padding: 0; cursor: pointer;">
+              Delete
+            </button>
+          </div>
         {:else}
           <!-- No review yet -->
           <p style="font-size: 15px; color: var(--text-tertiary); margin: 0 0 8px 0;">No review yet.</p>
@@ -410,8 +452,9 @@
       {/if}
     </div>
   </div>
+  </main>
 {:else}
-  <p style="font-size: 15px; color: var(--text-tertiary);">Book not found.</p>
+  <p style="font-size: 15px; color: var(--text-muted);">Book not found.</p>
 {/if}
 {/if}
 
