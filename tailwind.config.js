@@ -29,6 +29,7 @@ export default {
         }
       },
       fontFamily: {
+        headline: ['Newsreader', 'Georgia', 'Charter', 'serif'],
         sans: ['Inter', 'system-ui', 'sans-serif'],
         serif: ['Georgia', 'Charter', 'serif'],
         mono: ['JetBrains Mono', 'Fira Code', 'monospace']

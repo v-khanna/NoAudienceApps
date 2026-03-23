@@ -10,20 +10,46 @@
   font-display: swap;
 }
 
+@font-face {
+  font-family: 'Newsreader';
+  src: url('/fonts/newsreader-variable.woff2') format('woff2');
+  font-weight: 200 800;
+  font-display: swap;
+}
+
 :root {
-  --bg-base: #15191E;
-  --bg-surface: #1A1F26;
-  --bg-elevated: #1F252D;
-  --bg-inset: #12151A;
-  --text-primary: #D4D4D8;
-  --text-secondary: #8B8FA3;
-  --text-tertiary: #5A5E6E;
-  --text-muted: #3D4150;
+  /* Existing tokens — kept for backward compat with all pages */
+  --bg-base: #101418;
+  --bg-surface: #1C2024;
+  --bg-elevated: #262A2F;
+  --bg-inset: #181C20;
+  --text-primary: #E0E3E8;
+  --text-secondary: #99AABB;
+  --text-tertiary: #6B7280;
+  --text-muted: #6B7280;
   --border: rgba(255, 255, 255, 0.06);
   --border-subtle: rgba(255, 255, 255, 0.03);
   --border-strong: rgba(255, 255, 255, 0.10);
-  --accent: #40BCF4;
-  --accent-muted: rgba(64, 188, 244, 0.15);
+  --accent: #00E054;
+  --accent-muted: rgba(0, 224, 84, 0.15);
+
+  /* Stitch surface hierarchy */
+  --surface-base: #101418;
+  --surface-sidebar: #0B0F12;
+  --surface-container-low: #181C20;
+  --surface-container: #1C2024;
+  --surface-container-high: #262A2F;
+  --surface-container-highest: #31353A;
+  --surface-bright: #363A3E;
+
+  /* Stitch semantic colors */
+  --color-success: #00E054;
+  --color-warning: #FF8000;
+  --color-info: #40BCF4;
+  --color-error: #FFB4AB;
+
+  /* Ghost border */
+  --ghost-border: rgba(255, 255, 255, 0.06);
 }
 
 body {

@@ -1,5 +1,6 @@
 <script lang="ts">
   import { page } from '$app/stores';
+  import { onMount, onDestroy } from 'svelte';
   import StarRating from '@noaudience/core/components/StarRating.svelte';
   import { getFilmById, getFilmLogs, isOnWatchlist, addToWatchlist, removeFromWatchlist, type Film, type FilmLog } from '$lib/films/db';
 
@@ -58,6 +59,12 @@
     return `${h}h ${m}m`;
   }
 
+  function handleKeydown(e: KeyboardEvent) {
+    if (e.key === 'Escape') history.back();
+  }
+  onMount(() => window.addEventListener('keydown', handleKeydown));
+  onDestroy(() => window.removeEventListener('keydown', handleKeydown));
+
   function ratingToStars(rating: number): string {
     const full = Math.floor(rating);
     const half = rating % 1 >= 0.5;
@@ -67,6 +74,13 @@
 
 {#if film}
   <div class="max-w-3xl">
+    <!-- Back button -->
+    <button
+      onclick={() => history.back()}
+      style="display: inline-flex; align-items: center; gap: 4px; background: none; border: none; color: var(--text-muted); font-size: 12px; text-transform: uppercase; letter-spacing: 0.1em; cursor: pointer; padding: 0; margin-bottom: 24px; transition: color 150ms;"
+      onmouseenter={(e) => e.currentTarget.style.color = 'var(--text-primary)'}
+      onmouseleave={(e) => e.currentTarget.style.color = 'var(--text-muted)'}
+    >← Back</button>
     <!-- Poster + Info layout -->
     <div class="flex gap-24">
       <!-- Poster -->

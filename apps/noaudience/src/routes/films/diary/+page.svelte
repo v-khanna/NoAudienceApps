@@ -43,32 +43,35 @@
   }
 </script>
 
-<div class="max-w-3xl">
-  <h1 style="font-size: 28px; font-weight: 700; color: var(--text-primary); margin-bottom: 32px;">Diary</h1>
+<main style="padding-bottom: 64px;">
+  <h1 style="font-family: 'Newsreader', Georgia, serif; font-size: 1.75rem; font-weight: 500; color: var(--text-primary); margin: 0 0 8px;">Film Diary</h1>
+  <p style="font-size: 13px; color: var(--text-secondary); margin: 0 0 40px;">{logs.length} entries</p>
 
   {#each groupedLogs as group}
-    <section style="margin-bottom: 32px;">
+    <section style="margin-bottom: 40px;">
       <h2 class="month-header">{group.label}</h2>
-      <div class="diary-table">
-        {#each group.entries as entry, i}
+      <div style="display: flex; flex-direction: column; gap: 2px; border-radius: 10px; overflow: hidden;">
+        {#each group.entries as entry}
           <a
             href="/films/{entry.film.id}"
             class="diary-row"
-            class:border-bottom={i < group.entries.length - 1}
           >
             <span class="diary-date">
               {new Date(entry.watchedDate ?? '').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
             </span>
-            <img
-              src={entry.film.posterPath}
-              alt={entry.film.title}
-              class="diary-poster"
-            />
-            <span class="diary-title">{entry.film.title}</span>
-            <span class="diary-year">{entry.film.year}</span>
+            {#if entry.film.posterPath}
+              <img src={entry.film.posterPath} alt={entry.film.title} class="diary-poster" />
+            {/if}
+            <div style="flex: 1; min-width: 0;">
+              <span class="diary-title">{entry.film.title}</span>
+              <span class="diary-year">{entry.film.year}</span>
+            </div>
             <span class="diary-rating">{ratingToStars(entry.rating ?? 0)}</span>
             {#if entry.liked}
-              <span class="diary-liked">{'\u2665'}</span>
+              <span style="color: #FF6B6B; flex-shrink: 0;">{'\u2665'}</span>
+            {/if}
+            {#if entry.rewatch}
+              <span style="font-size: 11px; color: var(--text-muted); flex-shrink: 0;">↻</span>
             {/if}
           </a>
         {/each}
@@ -77,84 +80,74 @@
   {/each}
 
   {#if logs.length === 0}
-    <div style="padding: 48px 0; color: var(--text-secondary); text-align: center; font-size: 15px;">
-      No diary entries yet. Start logging films to build your viewing history.
+    <div style="padding: 80px 0; text-align: center;">
+      <p style="font-family: 'Newsreader', Georgia, serif; font-size: 1.25rem; color: var(--text-primary); margin: 0 0 8px;">Your diary is empty</p>
+      <p style="font-size: 13px; color: var(--text-secondary); margin: 0;">Start logging films to build your viewing history.</p>
     </div>
   {/if}
-</div>
+</main>
 
 <style>
   .month-header {
-    font-size: 13px;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: var(--text-tertiary);
-    margin-bottom: 8px;
+    font-family: 'Newsreader', Georgia, serif;
+    font-size: 1.125rem;
     font-weight: 500;
-  }
-
-  .diary-table {
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    overflow: hidden;
+    color: var(--text-primary);
+    margin-bottom: 12px;
   }
 
   .diary-row {
     display: flex;
     align-items: center;
-    gap: 12px;
-    height: 48px;
-    padding: 0 12px;
-    font-size: 15px;
+    gap: 14px;
+    padding: 10px 16px;
+    font-size: 14px;
     text-decoration: none;
     color: inherit;
-    transition: background-color 150ms ease-out;
+    background: var(--surface-container-low);
+    transition: background 150ms;
   }
   .diary-row:hover {
-    background-color: rgba(255, 255, 255, 0.03);
-  }
-  .diary-row.border-bottom {
-    border-bottom: 1px solid var(--border-subtle);
+    background: var(--surface-container);
   }
 
   .diary-date {
-    color: var(--text-secondary);
-    font-size: 13px;
-    width: 72px;
+    color: var(--text-muted);
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    width: 52px;
+    text-align: left;
     flex-shrink: 0;
   }
 
   .diary-poster {
-    width: 28px;
-    height: 42px;
+    width: 32px;
+    height: 48px;
     object-fit: cover;
-    border-radius: 2px;
-    border: 1px solid var(--border);
+    border-radius: 3px;
     flex-shrink: 0;
   }
 
   .diary-title {
+    font-family: 'Newsreader', Georgia, serif;
     color: var(--text-primary);
-    flex: 1;
-    min-width: 0;
+    font-weight: 500;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
 
   .diary-year {
-    color: var(--text-tertiary);
-    font-size: 13px;
+    color: var(--text-muted);
+    font-size: 12px;
+    margin-left: 6px;
     flex-shrink: 0;
   }
 
   .diary-rating {
     color: var(--accent);
-    flex-shrink: 0;
-  }
-
-  .diary-liked {
-    color: var(--text-secondary);
+    font-size: 13px;
     flex-shrink: 0;
   }
 </style>
