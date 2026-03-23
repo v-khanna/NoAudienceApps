@@ -3,7 +3,7 @@
   import StarRating from '@noaudience/core/components/StarRating.svelte';
   import TagInput from '@noaudience/core/components/TagInput.svelte';
   import { searchTmdb, type TmdbSearchResult } from './tmdb';
-  import { logFilm, addFilmFromTmdb } from './db';
+  import { logFilm, addFilmFromTmdb, addToWatchlist } from './db';
 
   interface Props {
     open: boolean;
@@ -76,6 +76,21 @@
     } catch (e: any) {
       errorMsg = `Save failed: ${e?.message || e}`;
       console.error('Save failed:', e);
+    }
+  }
+
+  async function handleAddToWatchlist() {
+    if (!selectedFilm) return;
+    try {
+      errorMsg = '';
+      const localFilm = await addFilmFromTmdb(selectedFilm);
+      await addToWatchlist(localFilm.id);
+      resetForm();
+      onsave?.();
+      onclose();
+    } catch (e: any) {
+      errorMsg = `Save failed: ${e?.message || e}`;
+      console.error('Save to watchlist failed:', e);
     }
   }
 
@@ -200,8 +215,9 @@
     </div>
 
     <!-- Save -->
-    <div class="flex justify-end">
-      <button class="save-btn" onclick={handleSave} disabled={!selectedFilm}>Save Entry</button>
+    <div style="display: flex; justify-content: flex-end; gap: 10px;">
+      <button class="watchlist-btn" onclick={handleAddToWatchlist} disabled={!selectedFilm}>+ Watchlist</button>
+      <button class="save-btn" onclick={handleSave} disabled={!selectedFilm}>Log Entry</button>
     </div>
   </div>
 </Modal>
@@ -334,6 +350,27 @@
   .toggle-btn.active {
     background: rgba(0, 224, 84, 0.1);
     color: var(--accent);
+  }
+
+  .watchlist-btn {
+    background: none;
+    color: var(--text-secondary);
+    border: 1px solid var(--ghost-border, rgba(255,255,255,0.06));
+    border-radius: 6px;
+    height: 44px;
+    padding: 0 18px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 150ms;
+  }
+  .watchlist-btn:hover {
+    color: var(--accent);
+    border-color: var(--accent);
+  }
+  .watchlist-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
   }
 
   .save-btn {
